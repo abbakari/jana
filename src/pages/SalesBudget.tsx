@@ -807,6 +807,40 @@ const SalesBudget: React.FC = () => {
     }
   };
 
+  const handleAddCustomerItemCombination = (combination: any) => {
+    // Add new customer-item combination to original data
+    const newId = Math.max(...originalTableData.map(item => item.id)) + 1;
+    const newRow: SalesBudgetItem = {
+      id: newId,
+      selected: false,
+      customer: combination.customerName,
+      item: combination.itemName,
+      category: combination.category || "New Category",
+      brand: combination.brand || "New Brand",
+      itemCombined: `${combination.itemName} (${combination.category || "New Category"} - ${combination.brand || "New Brand"})`,
+      budget2025: 0,
+      actual2025: 0,
+      budget2026: 0,
+      rate: 0,
+      stock: 0,
+      git: 0,
+      budgetValue2026: 0,
+      discount: 0,
+      monthlyData: months.map(month => ({
+        month: month.short,
+        budgetValue: 0,
+        actualValue: 0,
+        rate: 0,
+        stock: 0,
+        git: 0,
+        discount: 0
+      }))
+    };
+
+    setOriginalTableData(prev => [...prev, newRow]);
+    showNotification(`Customer-Item combination "${combination.customerName} - ${combination.itemName}" added successfully`, 'success');
+  };
+
 
 
   const handleYearlyBudgetSave = (budgetData: any) => {
