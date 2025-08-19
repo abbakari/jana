@@ -2093,6 +2093,11 @@ const SalesBudget: React.FC = () => {
           type={newAdditionType}
         />
 
+        <AddCustomerItemModal
+          isOpen={isCustomerItemModalOpen}
+          onClose={() => setIsCustomerItemModalOpen(false)}
+          onAdd={handleAddCustomerItemCombination}
+        />
 
         <YearlyBudgetModal
           isOpen={isYearlyBudgetModalOpen}
