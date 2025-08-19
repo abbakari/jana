@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { X, Plus } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { X, Plus, Search, Check } from 'lucide-react';
 
 interface CustomerItemCombination {
   customerName: string;
@@ -15,6 +15,48 @@ interface AddCustomerItemModalProps {
   onClose: () => void;
   onAdd: (combination: CustomerItemCombination) => void;
 }
+
+// Sample existing data from the application
+const existingCustomers = [
+  { name: 'Action Aid International (Tz)', code: 'AAI-TZ-001' },
+  { name: 'ADVENT CONSTRUCTION LTD.', code: 'ACL-001' },
+  { name: 'Global Trading Co.', code: 'GTC-002' },
+  { name: 'East Africa Motors', code: 'EAM-003' },
+  { name: 'Tanzania Auto Parts', code: 'TAP-004' }
+];
+
+const existingItems = [
+  { 
+    name: 'BF GOODRICH TYRE 235/85R16 120/116S TL AT/TA KO2 LRERWLGO', 
+    code: 'BFG-235-85R16',
+    category: 'Tyres',
+    brand: 'BF Goodrich'
+  },
+  { 
+    name: 'BF GOODRICH TYRE 265/65R17 120/117S TL AT/TA KO2 LRERWLGO', 
+    code: 'BFG-265-65R17',
+    category: 'Tyres',
+    brand: 'BF Goodrich'
+  },
+  { 
+    name: 'VALVE 0214 TR 414J FOR CAR TUBELESS TYRE', 
+    code: 'VLV-0214-TR414J',
+    category: 'Accessories',
+    brand: 'Generic'
+  },
+  { 
+    name: 'MICHELIN TYRE 265/65R17 112T TL LTX TRAIL', 
+    code: 'MCH-265-65R17',
+    category: 'Tyres',
+    brand: 'Michelin'
+  },
+  { 
+    name: 'WHEEL BALANCE ALLOYD RIMS', 
+    code: 'WBL-ALLOY-001',
+    category: 'TYRE SERVICE',
+    brand: 'TYRE SERVICE'
+  }
+];
 
 const AddCustomerItemModal: React.FC<AddCustomerItemModalProps> = ({
   isOpen,
@@ -35,11 +77,56 @@ const AddCustomerItemModal: React.FC<AddCustomerItemModalProps> = ({
     item: false
   });
 
+  const [searchTerms, setSearchTerms] = useState({
+    customer: '',
+    item: ''
+  });
+
+  // Filtered customers based on search
+  const filteredCustomers = useMemo(() => {
+    return existingCustomers.filter(customer =>
+      customer.name.toLowerCase().includes(searchTerms.customer.toLowerCase()) ||
+      customer.code.toLowerCase().includes(searchTerms.customer.toLowerCase())
+    );
+  }, [searchTerms.customer]);
+
+  // Filtered items based on search
+  const filteredItems = useMemo(() => {
+    return existingItems.filter(item =>
+      item.name.toLowerCase().includes(searchTerms.item.toLowerCase()) ||
+      item.code.toLowerCase().includes(searchTerms.item.toLowerCase()) ||
+      item.category.toLowerCase().includes(searchTerms.item.toLowerCase()) ||
+      item.brand.toLowerCase().includes(searchTerms.item.toLowerCase())
+    );
+  }, [searchTerms.item]);
+
   const handleInputChange = (field: keyof CustomerItemCombination, value: string) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
     }));
+  };
+
+  const handleSelectCustomer = (customer: typeof existingCustomers[0]) => {
+    setFormData(prev => ({
+      ...prev,
+      customerName: customer.name,
+      customerCode: customer.code
+    }));
+    setShowSelectExisting(prev => ({ ...prev, customer: false }));
+    setSearchTerms(prev => ({ ...prev, customer: '' }));
+  };
+
+  const handleSelectItem = (item: typeof existingItems[0]) => {
+    setFormData(prev => ({
+      ...prev,
+      itemName: item.name,
+      itemCode: item.code,
+      category: item.category,
+      brand: item.brand
+    }));
+    setShowSelectExisting(prev => ({ ...prev, item: false }));
+    setSearchTerms(prev => ({ ...prev, item: '' }));
   };
 
   const handleSubmit = () => {
@@ -60,6 +147,8 @@ const AddCustomerItemModal: React.FC<AddCustomerItemModalProps> = ({
       category: '',
       brand: ''
     });
+    setShowSelectExisting({ customer: false, item: false });
+    setSearchTerms({ customer: '', item: '' });
     
     onClose();
   };
@@ -74,6 +163,8 @@ const AddCustomerItemModal: React.FC<AddCustomerItemModalProps> = ({
       category: '',
       brand: ''
     });
+    setShowSelectExisting({ customer: false, item: false });
+    setSearchTerms({ customer: '', item: '' });
     onClose();
   };
 
@@ -81,7 +172,7 @@ const AddCustomerItemModal: React.FC<AddCustomerItemModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+      <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[95vh] overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <div className="flex items-center gap-2">
@@ -114,11 +205,51 @@ const AddCustomerItemModal: React.FC<AddCustomerItemModalProps> = ({
               </div>
               <button
                 onClick={() => setShowSelectExisting(prev => ({ ...prev, customer: !prev.customer }))}
-                className="text-blue-600 hover:text-blue-800 text-sm font-medium transition-colors"
+                className="text-blue-600 hover:text-blue-800 text-sm font-medium transition-colors flex items-center gap-1"
               >
+                <Search className="w-4 h-4" />
                 Select Existing
               </button>
             </div>
+
+            {/* Customer Search/Select Dropdown */}
+            {showSelectExisting.customer && (
+              <div className="border border-gray-300 rounded-md bg-gray-50 p-4">
+                <div className="mb-3">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                    <input
+                      type="text"
+                      placeholder="Search customers by name or code..."
+                      value={searchTerms.customer}
+                      onChange={(e) => setSearchTerms(prev => ({ ...prev, customer: e.target.value }))}
+                      className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                </div>
+                <div className="max-h-40 overflow-y-auto space-y-1">
+                  {filteredCustomers.length > 0 ? (
+                    filteredCustomers.map((customer, index) => (
+                      <button
+                        key={index}
+                        onClick={() => handleSelectCustomer(customer)}
+                        className="w-full text-left p-3 hover:bg-blue-50 border border-gray-200 rounded-md transition-colors flex items-center justify-between group"
+                      >
+                        <div>
+                          <div className="font-medium text-gray-900">{customer.name}</div>
+                          <div className="text-sm text-gray-500">Code: {customer.code}</div>
+                        </div>
+                        <Check className="w-4 h-4 text-green-600 opacity-0 group-hover:opacity-100 transition-opacity" />
+                      </button>
+                    ))
+                  ) : (
+                    <div className="text-center py-4 text-gray-500">
+                      No customers found matching "{searchTerms.customer}"
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
@@ -153,11 +284,57 @@ const AddCustomerItemModal: React.FC<AddCustomerItemModalProps> = ({
               </div>
               <button
                 onClick={() => setShowSelectExisting(prev => ({ ...prev, item: !prev.item }))}
-                className="text-blue-600 hover:text-blue-800 text-sm font-medium transition-colors"
+                className="text-blue-600 hover:text-blue-800 text-sm font-medium transition-colors flex items-center gap-1"
               >
+                <Search className="w-4 h-4" />
                 Select Existing
               </button>
             </div>
+
+            {/* Item Search/Select Dropdown */}
+            {showSelectExisting.item && (
+              <div className="border border-gray-300 rounded-md bg-gray-50 p-4">
+                <div className="mb-3">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                    <input
+                      type="text"
+                      placeholder="Search items by name, code, category, or brand..."
+                      value={searchTerms.item}
+                      onChange={(e) => setSearchTerms(prev => ({ ...prev, item: e.target.value }))}
+                      className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                </div>
+                <div className="max-h-48 overflow-y-auto space-y-1">
+                  {filteredItems.length > 0 ? (
+                    filteredItems.map((item, index) => (
+                      <button
+                        key={index}
+                        onClick={() => handleSelectItem(item)}
+                        className="w-full text-left p-3 hover:bg-blue-50 border border-gray-200 rounded-md transition-colors group"
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1">
+                            <div className="font-medium text-gray-900 truncate">{item.name}</div>
+                            <div className="text-sm text-gray-500 flex gap-4">
+                              <span>Code: {item.code}</span>
+                              <span>Category: {item.category}</span>
+                              <span>Brand: {item.brand}</span>
+                            </div>
+                          </div>
+                          <Check className="w-4 h-4 text-green-600 opacity-0 group-hover:opacity-100 transition-opacity ml-2" />
+                        </div>
+                      </button>
+                    ))
+                  ) : (
+                    <div className="text-center py-4 text-gray-500">
+                      No items found matching "{searchTerms.item}"
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
