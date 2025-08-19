@@ -420,18 +420,17 @@ const RollingForecast: React.FC = () => {
     }
   };
 
-  const handleSaveNewAddition = () => {
-    // Handle save logic for new customer/item
-    if (selectedCustomerOption === 'new' && newCustomerData.name && newCustomerData.code) {
-      // Add new customer to customers list
+  const handleAddCustomerItemCombination = (combination: any) => {
+    // Add new customer if provided
+    if (combination.customerName && combination.customerCode) {
       const newCustomer: Customer = {
         id: (customers.length + 1).toString(),
-        name: newCustomerData.name,
-        code: newCustomerData.code,
-        email: newCustomerData.email,
-        phone: newCustomerData.phone,
-        region: newCustomerData.region,
-        segment: newCustomerData.segment,
+        name: combination.customerName,
+        code: combination.customerCode,
+        email: '',
+        phone: '',
+        region: '',
+        segment: '',
         creditLimit: 100000,
         currency: 'USD',
         active: true,
@@ -442,61 +441,27 @@ const RollingForecast: React.FC = () => {
         tier: 'bronze',
         manager: 'System'
       };
-      
+
       setCustomers(prev => [...prev, newCustomer]);
-      
-      // Add new row to table data
-      const newTableRow = {
-        id: (tableData.length + 1).toString(),
-        customer: newCustomerData.name,
-        item: selectedExistingItem || 'Default Item',
-        bud25: 0,
-        ytd25: 0,
-        forecast: 0,
-        stock: 0,
-        git: 0,
-        eta: ''
-      };
-      
-      setTableData(prev => [...prev, newTableRow]);
-      
-      console.log('New customer added:', newCustomer);
-      console.log('New table row added:', newTableRow);
-    } else if (selectedCustomerOption === 'existing' && selectedExistingCustomer && selectedExistingItem) {
-      // Add existing customer with selected item
-      const newTableRow = {
-        id: (tableData.length + 1).toString(),
-        customer: selectedExistingCustomer,
-        item: selectedExistingItem,
-        bud25: 0,
-        ytd25: 0,
-        forecast: 0,
-        stock: 0,
-        git: 0,
-        eta: ''
-      };
-      
-      setTableData(prev => [...prev, newTableRow]);
-      
-      console.log('New table row added with existing customer:', newTableRow);
     }
-    
-    // Reset form
-    setSelectedCustomerOption('existing');
-    setSelectedItemOption('existing');
-    setNewCustomerData({
-      name: '',
-      code: '',
-      email: '',
-      phone: '',
-      region: '',
-      segment: ''
-    });
-    setSelectedExistingCustomer('');
-    setSelectedExistingItem('');
-    
-    // Close modal
-    setIsNewAdditionModalOpen(false);
+
+    // Add new item to the table
+    const newTableRow = {
+      id: (tableData.length + 1).toString(),
+      customer: combination.customerName,
+      item: combination.itemName,
+      bud25: 0,
+      ytd25: 0,
+      forecast: 0,
+      stock: 0,
+      git: 0,
+      eta: ''
+    };
+
+    setTableData(prev => [...prev, newTableRow]);
+
+    console.log('New customer-item combination added:', combination);
+    console.log('New table row added:', newTableRow);
   };
 
   const handleExpandRow = (id: string) => {
