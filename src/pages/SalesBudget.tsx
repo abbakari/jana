@@ -81,6 +81,7 @@ const SalesBudget: React.FC = () => {
   // Modal states
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [isNewAdditionModalOpen, setIsNewAdditionModalOpen] = useState(false);
+  const [isCustomerItemModalOpen, setIsCustomerItemModalOpen] = useState(false);
   const [newAdditionType] = useState<'customer' | 'item'>('item');
   const [isYearlyBudgetModalOpen, setIsYearlyBudgetModalOpen] = useState(false);
   const [isStockManagementModalOpen, setIsStockManagementModalOpen] = useState(false);
