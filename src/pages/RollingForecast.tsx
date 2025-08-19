@@ -14,6 +14,7 @@ import ManagerStockManagement from '../components/ManagerStockManagement';
 import ManagerRollingForecastInterface from '../components/ManagerRollingForecastInterface';
 import DataPreservationIndicator from '../components/DataPreservationIndicator';
 import RollingForecastReport from '../components/RollingForecastReport';
+import AddCustomerItemModal from '../components/AddCustomerItemModal';
 import DataPersistenceManager, { SavedForecastData } from '../utils/dataPersistence';
 import { initializeSampleGitData } from '../utils/sampleGitData';
 import {
@@ -41,18 +42,6 @@ const RollingForecast: React.FC = () => {
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
   const [monthlyForecastData, setMonthlyForecastData] = useState<{[key: string]: {[month: string]: number}}>({});
   const [isNewAdditionModalOpen, setIsNewAdditionModalOpen] = useState(false);
-  const [selectedCustomerOption, setSelectedCustomerOption] = useState<'existing' | 'new'>('existing');
-  const [selectedItemOption, setSelectedItemOption] = useState<'existing'>('existing');
-  const [newCustomerData, setNewCustomerData] = useState({
-    name: '',
-    code: '',
-    email: '',
-    phone: '',
-    region: '',
-    segment: ''
-  });
-  const [selectedExistingCustomer, setSelectedExistingCustomer] = useState('');
-  const [selectedExistingItem, setSelectedExistingItem] = useState('');
   const [showBudgetData, setShowBudgetData] = useState(true);
   const [isCustomerForecastModalOpen, setIsCustomerForecastModalOpen] = useState(false);
   const [selectedCustomerForBreakdown, setSelectedCustomerForBreakdown] = useState<string>('');
@@ -431,18 +420,17 @@ const RollingForecast: React.FC = () => {
     }
   };
 
-  const handleSaveNewAddition = () => {
-    // Handle save logic for new customer/item
-    if (selectedCustomerOption === 'new' && newCustomerData.name && newCustomerData.code) {
-      // Add new customer to customers list
+  const handleAddCustomerItemCombination = (combination: any) => {
+    // Add new customer if provided
+    if (combination.customerName && combination.customerCode) {
       const newCustomer: Customer = {
         id: (customers.length + 1).toString(),
-        name: newCustomerData.name,
-        code: newCustomerData.code,
-        email: newCustomerData.email,
-        phone: newCustomerData.phone,
-        region: newCustomerData.region,
-        segment: newCustomerData.segment,
+        name: combination.customerName,
+        code: combination.customerCode,
+        email: '',
+        phone: '',
+        region: '',
+        segment: '',
         creditLimit: 100000,
         currency: 'USD',
         active: true,
@@ -453,61 +441,27 @@ const RollingForecast: React.FC = () => {
         tier: 'bronze',
         manager: 'System'
       };
-      
+
       setCustomers(prev => [...prev, newCustomer]);
-      
-      // Add new row to table data
-      const newTableRow = {
-        id: (tableData.length + 1).toString(),
-        customer: newCustomerData.name,
-        item: selectedExistingItem || 'Default Item',
-        bud25: 0,
-        ytd25: 0,
-        forecast: 0,
-        stock: 0,
-        git: 0,
-        eta: ''
-      };
-      
-      setTableData(prev => [...prev, newTableRow]);
-      
-      console.log('New customer added:', newCustomer);
-      console.log('New table row added:', newTableRow);
-    } else if (selectedCustomerOption === 'existing' && selectedExistingCustomer && selectedExistingItem) {
-      // Add existing customer with selected item
-      const newTableRow = {
-        id: (tableData.length + 1).toString(),
-        customer: selectedExistingCustomer,
-        item: selectedExistingItem,
-        bud25: 0,
-        ytd25: 0,
-        forecast: 0,
-        stock: 0,
-        git: 0,
-        eta: ''
-      };
-      
-      setTableData(prev => [...prev, newTableRow]);
-      
-      console.log('New table row added with existing customer:', newTableRow);
     }
-    
-    // Reset form
-    setSelectedCustomerOption('existing');
-    setSelectedItemOption('existing');
-    setNewCustomerData({
-      name: '',
-      code: '',
-      email: '',
-      phone: '',
-      region: '',
-      segment: ''
-    });
-    setSelectedExistingCustomer('');
-    setSelectedExistingItem('');
-    
-    // Close modal
-    setIsNewAdditionModalOpen(false);
+
+    // Add new item to the table
+    const newTableRow = {
+      id: (tableData.length + 1).toString(),
+      customer: combination.customerName,
+      item: combination.itemName,
+      bud25: 0,
+      ytd25: 0,
+      forecast: 0,
+      stock: 0,
+      git: 0,
+      eta: ''
+    };
+
+    setTableData(prev => [...prev, newTableRow]);
+
+    console.log('New customer-item combination added:', combination);
+    console.log('New table row added:', newTableRow);
   };
 
   const handleExpandRow = (id: string) => {
@@ -1642,255 +1596,12 @@ const RollingForecast: React.FC = () => {
         </div>
       </div>
 
-      {/* New Addition Modal */}
-      {isNewAdditionModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4">
-              <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold text-gray-900">Add Customer/Item</h2>
-                <button
-                  onClick={() => setIsNewAdditionModalOpen(false)}
-                  className="text-gray-400 hover:text-gray-600 transition-colors"
-                >
-                  <X className="w-6 h-6" />
-                </button>
-              </div>
-            </div>
-
-            <div className="p-6 space-y-6">
-              {/* Customer Section */}
-              <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-4">Customer</h3>
-                
-                {/* Customer Selection Options */}
-                <div className="space-y-3 mb-4">
-                  <label className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-colors ${
-                    selectedCustomerOption === 'existing' ? 'border-orange-500 bg-orange-50' : 'border-gray-300 hover:bg-gray-50'
-                  }`}>
-                    <input
-                      type="radio"
-                      name="customerOption"
-                      value="existing"
-                      checked={selectedCustomerOption === 'existing'}
-                      onChange={(e) => setSelectedCustomerOption(e.target.value as 'existing' | 'new')}
-                      className="sr-only"
-                    />
-                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                      selectedCustomerOption === 'existing' ? 'border-orange-500 bg-orange-500' : 'border-gray-300'
-                    }`}>
-                      {selectedCustomerOption === 'existing' && <div className="w-2.5 h-2.5 bg-white rounded-full"></div>}
-                    </div>
-                    <div className="flex items-center gap-3 flex-1">
-                      <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
-                        <List className="w-5 h-5 text-orange-600" />
-                      </div>
-                      <span className="text-sm font-medium text-gray-900">Select from existing customers list</span>
-                    </div>
-                  </label>
-
-                  <label className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-colors ${
-                    selectedCustomerOption === 'new' ? 'border-orange-500 bg-orange-50' : 'border-gray-300 hover:bg-gray-50'
-                  }`}>
-                    <input
-                      type="radio"
-                      name="customerOption"
-                      value="new"
-                      checked={selectedCustomerOption === 'new'}
-                      onChange={(e) => setSelectedCustomerOption(e.target.value as 'existing' | 'new')}
-                      className="sr-only"
-                    />
-                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                      selectedCustomerOption === 'new' ? 'border-orange-500 bg-orange-500' : 'border-gray-300'
-                    }`}>
-                      {selectedCustomerOption === 'new' && <div className="w-2.5 h-2.5 bg-white rounded-full"></div>}
-                    </div>
-                    <div className="flex items-center gap-3 flex-1">
-                      <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                        <UserPlus className="w-5 h-5 text-blue-600" />
-                      </div>
-                      <span className="text-sm font-medium text-gray-900">Create New Customer</span>
-                    </div>
-                  </label>
-                </div>
-
-                {/* Customer Details */}
-                <div className="space-y-4">
-                  {selectedCustomerOption === 'existing' ? (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Customer</label>
-                      <div className="relative">
-                        <select
-                          value={selectedExistingCustomer}
-                          onChange={(e) => setSelectedExistingCustomer(e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none"
-                        >
-                          <option value="">Search customer</option>
-                          {customers.map(customer => (
-                            <option key={customer.id} value={customer.name}>
-                              {customer.name}
-                            </option>
-                          ))}
-                        </select>
-                        <ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-gray-400 pointer-events-none" />
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">CUSTOMER NAME</label>
-                          <input
-                            type="text"
-                            placeholder="Enter customer name"
-                            value={newCustomerData.name}
-                            onChange={(e) => setNewCustomerData({...newCustomerData, name: e.target.value})}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">CUSTOMER CODE</label>
-                          <input
-                            type="text"
-                            placeholder="Enter customer code"
-                            value={newCustomerData.code}
-                            onChange={(e) => setNewCustomerData({...newCustomerData, code: e.target.value})}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          />
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">EMAIL</label>
-                          <input
-                            type="email"
-                            placeholder="Enter email address"
-                            value={newCustomerData.email}
-                            onChange={(e) => setNewCustomerData({...newCustomerData, email: e.target.value})}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">PHONE</label>
-                          <input
-                            type="tel"
-                            placeholder="Enter phone number"
-                            value={newCustomerData.phone}
-                            onChange={(e) => setNewCustomerData({...newCustomerData, phone: e.target.value})}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          />
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">REGION</label>
-                          <select
-                            value={newCustomerData.region}
-                            onChange={(e) => setNewCustomerData({...newCustomerData, region: e.target.value})}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          >
-                            <option value="">Select region</option>
-                            <option value="Africa">Africa</option>
-                            <option value="North America">North America</option>
-                            <option value="Europe">Europe</option>
-                            <option value="Asia">Asia</option>
-                            <option value="Latin America">Latin America</option>
-                          </select>
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">SEGMENT</label>
-                          <select
-                            value={newCustomerData.segment}
-                            onChange={(e) => setNewCustomerData({...newCustomerData, segment: e.target.value})}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          >
-                            <option value="">Select segment</option>
-                            <option value="Enterprise">Enterprise</option>
-                            <option value="SMB">SMB</option>
-                            <option value="Government">Government</option>
-                            <option value="NGO">NGO</option>
-                            <option value="Retail">Retail</option>
-                          </select>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Item Section */}
-              <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-4">Item</h3>
-                
-                {/* Item Selection Options */}
-                <div className="space-y-3 mb-4">
-                  <label className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-colors ${
-                    selectedItemOption === 'existing' ? 'border-orange-500 bg-orange-50' : 'border-gray-300 hover:bg-gray-50'
-                  }`}>
-                    <input
-                      type="radio"
-                      name="itemOption"
-                      value="existing"
-                      checked={selectedItemOption === 'existing'}
-                      onChange={(e) => setSelectedItemOption(e.target.value as 'existing')}
-                      className="sr-only"
-                    />
-                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                      selectedItemOption === 'existing' ? 'border-orange-500 bg-orange-500' : 'border-gray-300'
-                    }`}>
-                      {selectedItemOption === 'existing' && <div className="w-2.5 h-2.5 bg-white rounded-full"></div>}
-                    </div>
-                    <div className="flex items-center gap-3 flex-1">
-                      <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
-                        <List className="w-5 h-5 text-orange-600" />
-                      </div>
-                      <span className="text-sm font-medium text-gray-900">Select from existing items list</span>
-                    </div>
-                  </label>
-                </div>
-
-                {/* Item Details */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Item</label>
-                  <div className="relative">
-                    <select
-                      value={selectedExistingItem}
-                      onChange={(e) => setSelectedExistingItem(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none"
-                    >
-                      <option value="">Search item</option>
-                      {items.map(item => (
-                        <option key={item.id} value={item.name}>
-                          {item.name}
-                        </option>
-                      ))}
-                    </select>
-                    <ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-gray-400 pointer-events-none" />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="sticky bottom-0 bg-white border-t border-gray-200 px-6 py-4">
-              <div className="flex gap-3">
-                <button
-                  onClick={handleSaveNewAddition}
-                  className="flex-1 bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition-colors font-medium"
-                >
-                  Save
-                </button>
-                <button
-                  onClick={() => setIsNewAdditionModalOpen(false)}
-                  className="flex-1 bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition-colors font-medium"
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Add Customer-Item Combination Modal */}
+      <AddCustomerItemModal
+        isOpen={isNewAdditionModalOpen}
+        onClose={() => setIsNewAdditionModalOpen(false)}
+        onAdd={handleAddCustomerItemCombination}
+      />
 
       {/* Customer Forecast Modal */}
       <CustomerForecastModal

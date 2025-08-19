@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import ExportModal, { ExportConfig } from '../components/ExportModal';
 import NewAdditionModal, { NewItemData } from '../components/NewAdditionModal';
+import AddCustomerItemModal from '../components/AddCustomerItemModal';
 import YearlyBudgetModal from '../components/YearlyBudgetModal';
 import SalesmanStockManagement from '../components/SalesmanStockManagement';
 import ManagerStockManagement from '../components/ManagerStockManagement';
@@ -80,6 +81,7 @@ const SalesBudget: React.FC = () => {
   // Modal states
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [isNewAdditionModalOpen, setIsNewAdditionModalOpen] = useState(false);
+  const [isCustomerItemModalOpen, setIsCustomerItemModalOpen] = useState(false);
   const [newAdditionType] = useState<'customer' | 'item'>('item');
   const [isYearlyBudgetModalOpen, setIsYearlyBudgetModalOpen] = useState(false);
   const [isStockManagementModalOpen, setIsStockManagementModalOpen] = useState(false);
@@ -805,6 +807,40 @@ const SalesBudget: React.FC = () => {
     }
   };
 
+  const handleAddCustomerItemCombination = (combination: any) => {
+    // Add new customer-item combination to original data
+    const newId = Math.max(...originalTableData.map(item => item.id)) + 1;
+    const newRow: SalesBudgetItem = {
+      id: newId,
+      selected: false,
+      customer: combination.customerName,
+      item: combination.itemName,
+      category: combination.category || "New Category",
+      brand: combination.brand || "New Brand",
+      itemCombined: `${combination.itemName} (${combination.category || "New Category"} - ${combination.brand || "New Brand"})`,
+      budget2025: 0,
+      actual2025: 0,
+      budget2026: 0,
+      rate: 0,
+      stock: 0,
+      git: 0,
+      budgetValue2026: 0,
+      discount: 0,
+      monthlyData: months.map(month => ({
+        month: month.short,
+        budgetValue: 0,
+        actualValue: 0,
+        rate: 0,
+        stock: 0,
+        git: 0,
+        discount: 0
+      }))
+    };
+
+    setOriginalTableData(prev => [...prev, newRow]);
+    showNotification(`Customer-Item combination "${combination.customerName} - ${combination.itemName}" added successfully`, 'success');
+  };
+
 
 
   const handleYearlyBudgetSave = (budgetData: any) => {
@@ -1304,7 +1340,7 @@ const SalesBudget: React.FC = () => {
                       <button
                         onClick={() => {
                           console.log('New Addition button clicked');
-                          setIsNewAdditionModalOpen(true);
+                          setIsCustomerItemModalOpen(true);
                         }}
                         className="bg-gray-500 text-white font-semibold px-2 py-1 rounded-md text-xs flex items-center gap-1 hover:bg-gray-600 transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-sm hover:shadow-md"
                         title="Add new customer or item to the budget (Salesman only)"
@@ -2057,6 +2093,11 @@ const SalesBudget: React.FC = () => {
           type={newAdditionType}
         />
 
+        <AddCustomerItemModal
+          isOpen={isCustomerItemModalOpen}
+          onClose={() => setIsCustomerItemModalOpen(false)}
+          onAdd={handleAddCustomerItemCombination}
+        />
 
         <YearlyBudgetModal
           isOpen={isYearlyBudgetModalOpen}
