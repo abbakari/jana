@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import ExportModal, { ExportConfig } from '../components/ExportModal';
 import NewAdditionModal, { NewItemData } from '../components/NewAdditionModal';
+import AddCustomerItemModal from '../components/AddCustomerItemModal';
 import YearlyBudgetModal from '../components/YearlyBudgetModal';
 import SalesmanStockManagement from '../components/SalesmanStockManagement';
 import ManagerStockManagement from '../components/ManagerStockManagement';
