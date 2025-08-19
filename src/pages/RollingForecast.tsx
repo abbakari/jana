@@ -42,18 +42,6 @@ const RollingForecast: React.FC = () => {
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
   const [monthlyForecastData, setMonthlyForecastData] = useState<{[key: string]: {[month: string]: number}}>({});
   const [isNewAdditionModalOpen, setIsNewAdditionModalOpen] = useState(false);
-  const [selectedCustomerOption, setSelectedCustomerOption] = useState<'existing' | 'new'>('existing');
-  const [selectedItemOption, setSelectedItemOption] = useState<'existing'>('existing');
-  const [newCustomerData, setNewCustomerData] = useState({
-    name: '',
-    code: '',
-    email: '',
-    phone: '',
-    region: '',
-    segment: ''
-  });
-  const [selectedExistingCustomer, setSelectedExistingCustomer] = useState('');
-  const [selectedExistingItem, setSelectedExistingItem] = useState('');
   const [showBudgetData, setShowBudgetData] = useState(true);
   const [isCustomerForecastModalOpen, setIsCustomerForecastModalOpen] = useState(false);
   const [selectedCustomerForBreakdown, setSelectedCustomerForBreakdown] = useState<string>('');
