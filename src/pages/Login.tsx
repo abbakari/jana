@@ -476,6 +476,13 @@ const Login: React.FC = () => {
 
           {/* Right Column - Login Form and Demo Users */}
           <Grid item xs={12} md={6}>
+            <Box sx={{
+              height: '100%',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'center',
+              px: 1
+            }}>
             {/* Enhanced Login Form */}
             <AdvancedYellowForm elevation={24}>
               <Typography
@@ -724,6 +731,7 @@ const Login: React.FC = () => {
                   </Typography>
                 </CardContent>
               </Card>
+            </Box>
             </Box>
           </Grid>
         </Grid>
