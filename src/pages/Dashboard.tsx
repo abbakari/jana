@@ -407,6 +407,13 @@ const Dashboard: React.FC = () => {
       case 'supply_chain':
         return [
           {
+            icon: Activity,
+            title: 'Supply Chain Dashboard',
+            description: 'Monitor all team activities and communicate',
+            color: 'indigo-600',
+            onClick: () => navigate('/supply-chain-dashboard')
+          },
+          {
             icon: Package,
             title: 'Inventory Management',
             description: 'Manage stock levels',
