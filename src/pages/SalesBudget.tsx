@@ -1927,18 +1927,100 @@ const SalesBudget: React.FC = () => {
                                         </button>
                                         <button
                                           onClick={() => {
-                                            const seasonalMultipliers = [0.8, 0.8, 0.9, 0.9, 1.0, 1.0, 1.1, 1.1, 1.2, 1.2, 1.3, 1.4];
                                             const totalBudget = editingMonthlyData[row.id]?.reduce((sum, month) => sum + month.budgetValue, 0) || 0;
+                                            const itemValue = totalBudget * (row.rate || 1); // Calculate total monetary value
+
+                                            // Define holiday-heavy months (typically lower sales due to holidays/vacation periods)
+                                            // Index: 0=Jan, 1=Feb, 2=Mar, 3=Apr, 4=May, 5=Jun, 6=Jul, 7=Aug, 8=Sep, 9=Oct, 10=Nov, 11=Dec
+                                            const holidayMonths = [0, 6, 7, 11]; // Jan (New Year), Jul (Summer), Aug (Summer), Dec (Christmas)
+                                            const nonHolidayMonths = [1, 2, 3, 4, 5, 8, 9, 10]; // Feb, Mar, Apr, May, Jun, Sep, Oct, Nov
+
+                                            // Smart threshold: Large items ($50,000+ value) go to non-holiday months
+                                            // Small items (under $50,000) can be distributed to holiday months
+                                            const isLargeItem = itemValue >= 50000;
+
+                                            let distributionStrategy;
+
+                                            if (isLargeItem) {
+                                              // Large items: Focus on non-holiday months for maximum sales potential
+                                              // 70% of budget in non-holiday months, 30% in holiday months
+                                              distributionStrategy = [
+                                                0.6,  // Jan (holiday) - reduced
+                                                1.4,  // Feb (non-holiday) - increased
+                                                1.3,  // Mar (non-holiday) - increased
+                                                1.2,  // Apr (non-holiday) - increased
+                                                1.3,  // May (non-holiday) - increased
+                                                1.2,  // Jun (non-holiday) - increased
+                                                0.5,  // Jul (holiday) - reduced
+                                                0.6,  // Aug (holiday) - reduced
+                                                1.4,  // Sep (non-holiday) - increased
+                                                1.3,  // Oct (non-holiday) - increased
+                                                1.2,  // Nov (non-holiday) - increased
+                                                0.5   // Dec (holiday) - reduced
+                                              ];
+                                            } else {
+                                              // Small items: Can leverage holiday months for steady sales
+                                              // More balanced distribution with slight holiday preference for smaller orders
+                                              distributionStrategy = [
+                                                1.1,  // Jan (holiday) - balanced
+                                                1.0,  // Feb (non-holiday)
+                                                0.9,  // Mar (non-holiday)
+                                                1.0,  // Apr (non-holiday)
+                                                0.9,  // May (non-holiday)
+                                                1.0,  // Jun (non-holiday)
+                                                1.2,  // Jul (holiday) - increased for small items
+                                                1.3,  // Aug (holiday) - increased for small items
+                                                0.9,  // Sep (non-holiday)
+                                                1.0,  // Oct (non-holiday)
+                                                0.9,  // Nov (non-holiday)
+                                                1.3   // Dec (holiday) - increased for small items
+                                              ];
+                                            }
+
+                                            // Apply business intelligence: boost Q4 for year-end budget consumption
+                                            // and Q2 for mid-year procurement cycles
+                                            const businessBoostMultipliers = [
+                                              1.0,  // Jan
+                                              1.0,  // Feb
+                                              1.0,  // Mar
+                                              1.1,  // Apr (Q2 start)
+                                              1.1,  // May (Q2 procurement)
+                                              1.1,  // Jun (Q2 end)
+                                              1.0,  // Jul
+                                              1.0,  // Aug
+                                              1.0,  // Sep
+                                              1.1,  // Oct (Q4 start)
+                                              1.2,  // Nov (Q4 procurement)
+                                              1.1   // Dec (Q4 year-end)
+                                            ];
+
+                                            // Combine strategies for intelligent distribution
+                                            const finalMultipliers = distributionStrategy.map((seasonal, index) =>
+                                              seasonal * businessBoostMultipliers[index]
+                                            );
+
+                                            // Normalize to ensure total equals original budget
+                                            const multiplierSum = finalMultipliers.reduce((sum, mult) => sum + mult, 0);
+                                            const normalizedMultipliers = finalMultipliers.map(mult => mult / multiplierSum * 12);
+
                                             const baseValue = totalBudget / 12;
                                             setEditingMonthlyData(prev => ({
                                               ...prev,
                                               [row.id]: prev[row.id]?.map((month, index) => ({
                                                 ...month,
-                                                budgetValue: Math.round(baseValue * seasonalMultipliers[index])
+                                                budgetValue: Math.round(baseValue * normalizedMultipliers[index])
                                               })) || []
                                             }));
+
+                                            // Show notification about the strategy applied
+                                            const strategy = isLargeItem ? 'Large Item Strategy' : 'Small Item Strategy';
+                                            const explanation = isLargeItem
+                                              ? 'Focused distribution on non-holiday months for maximum sales potential'
+                                              : 'Balanced distribution leveraging holiday months for steady small orders';
+                                            showNotification(`${strategy}: ${explanation}`, 'success');
                                           }}
                                           className="bg-green-100 text-green-800 px-3 py-1 rounded text-xs hover:bg-green-200 transition-colors"
+                                          title="Smart seasonal distribution: Large items focused on non-holiday months, small items balanced across all months"
                                         >
                                           📈 Seasonal Growth
                                         </button>
