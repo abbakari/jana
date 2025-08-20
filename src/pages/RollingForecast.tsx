@@ -20,6 +20,7 @@ import { initializeSampleGitData } from '../utils/sampleGitData';
 import { ActivityLogger } from '../utils/activityLogger';
 import ManagerActivityDashboard from '../components/ManagerActivityDashboard';
 import MessagingSystem from '../components/MessagingSystem';
+import { useFullTimeSync } from '../hooks/useTimeSync';
 import {
   getCurrentMonth,
   getCurrentYear,
