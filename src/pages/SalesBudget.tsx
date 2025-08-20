@@ -1645,6 +1645,16 @@ const SalesBudget: React.FC = () => {
                     </>
                   )}
 
+                  {/* Messaging System - Available to all users */}
+                  <button
+                    onClick={() => setIsMessagingSystemOpen(true)}
+                    className="bg-green-100 text-green-800 font-semibold px-2 py-1 rounded-md text-xs flex items-center gap-1 hover:bg-green-200 transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-sm hover:shadow-md"
+                    title="Open messaging system to communicate with team"
+                  >
+                    <MessageCircle className="w-4 h-4" />
+                    <span>Messages</span>
+                  </button>
+
                   {/* Follow-backs button for salesman and manager */}
                   {(user?.role === 'salesman' || user?.role === 'manager') && (
                     <FollowBacksButton />
