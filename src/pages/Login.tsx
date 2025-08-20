@@ -386,12 +386,12 @@ const Login: React.FC = () => {
         minHeight: '100vh',
         display: 'flex',
         alignItems: 'center',
-        py: 3,
-        overflow: 'auto'
+        py: 1,
+        overflow: 'hidden'
       }}
     >
-      <Container maxWidth="lg">
-        <Grid container spacing={6} alignItems="center">
+      <Container maxWidth="xl">
+        <Grid container spacing={3} alignItems="center">
           {/* Left Column - Enhanced Branding and Realistic Tyre */}
           <Grid item xs={12} md={5}>
             <Box sx={{ textAlign: 'center', mb: 3 }}>
