@@ -394,7 +394,7 @@ const Login: React.FC = () => {
         <Grid container spacing={3} alignItems="center">
           {/* Left Column - Enhanced Branding and Realistic Tyre */}
           <Grid item xs={12} md={5}>
-            <Box sx={{ textAlign: 'center', mb: 3 }}>
+            <Box sx={{ textAlign: 'center', mb: 1 }}>
               {/* Real Tyre with Continuous Horizontal Movement */}
               <TyreContainer>
                 <RealTyre
@@ -404,31 +404,17 @@ const Login: React.FC = () => {
                 <RoadTrack />
               </TyreContainer>
 
-              {/* Tyre Animation Info */}
-              <Box sx={{ textAlign: 'center', mb: 2 }}>
-                <Typography
-                  variant="caption"
-                  sx={{
-                    color: '#666',
-                    fontSize: '0.85rem',
-                    fontStyle: 'italic'
-                  }}
-                >
-                  🚗 Watch the real tyre roll continuously →
-                </Typography>
-              </Box>
-              
               {/* Enhanced Company Name */}
               <CompanyBranding variant="h3" component="h1">
                 SUPERDOLL
               </CompanyBranding>
-              
-              <Typography 
-                variant="h4" 
-                component="h2" 
-                sx={{ 
-                  color: '#1565C0', 
-                  mb: 2, 
+
+              <Typography
+                variant="h5"
+                component="h2"
+                sx={{
+                  color: '#1565C0',
+                  mb: 1,
                   fontWeight: 'bold',
                   textShadow: '2px 2px 4px rgba(0,0,0,0.2)',
                   background: 'linear-gradient(45deg, #1565C0, #42A5F5)',
@@ -439,37 +425,51 @@ const Login: React.FC = () => {
               >
                 Welcome Back
               </Typography>
-              
-              <Typography 
-                variant="h6" 
-                sx={{ 
+
+              <Typography
+                variant="body1"
+                sx={{
                   color: '#424242',
                   fontWeight: 'medium',
-                  mb: 2,
+                  mb: 1,
                   textShadow: '1px 1px 2px rgba(255,255,255,0.5)'
                 }}
               >
-                🚗 Premium Tyre & Auto Parts Management System
+                🚗 Premium Tyre & Auto Parts System
               </Typography>
-              
-              <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, flexWrap: 'wrap' }}>
-                <Chip 
-                  label="🔒 Secure Login" 
-                  sx={{ 
+
+              <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1, flexWrap: 'wrap', mb: 1 }}>
+                <Chip
+                  label="🔒 Secure"
+                  size="small"
+                  sx={{
                     backgroundColor: 'rgba(255,255,255,0.9)',
                     color: '#1976D2',
                     fontWeight: 'bold'
-                  }} 
+                  }}
                 />
-                <Chip 
-                  label="⚡ Real-time Dashboard" 
-                  sx={{ 
+                <Chip
+                  label="⚡ Real-time"
+                  size="small"
+                  sx={{
                     backgroundColor: 'rgba(255,255,255,0.9)',
                     color: '#FF8F00',
                     fontWeight: 'bold'
-                  }} 
+                  }}
                 />
               </Box>
+
+              <Typography
+                variant="caption"
+                sx={{
+                  color: '#666',
+                  fontSize: '0.8rem',
+                  fontStyle: 'italic',
+                  display: 'block'
+                }}
+              >
+                🚗 Watch the tyre roll left to right →
+              </Typography>
             </Box>
           </Grid>
 
