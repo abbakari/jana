@@ -384,36 +384,16 @@ const Login: React.FC = () => {
         <Grid container spacing={3} alignItems="stretch">
           {/* Left Column - ALL Branding Content and Tyre Animation */}
           <Grid item xs={12} md={6}>
-            <Box sx={{ textAlign: 'center', mb: 1 }}>
-              {/* Real Tyre with Continuous Horizontal Movement */}
-              <TyreContainer>
-                <RealTyre
-                  src="https://cdn.builder.io/api/v1/image/assets%2F44729c48b8a1436188bb6ac245b84af3%2F1ae80643c7e34f259f80e82971111485?format=webp&width=800"
-                  alt="Real rotating tyre"
-                  onLoad={() => console.log('Tyre image loaded successfully')}
-                  onError={(e) => console.error('Tyre image failed to load:', e)}
-                />
-
-                {/* Static test tyre for debugging */}
-                <img
-                  src="https://cdn.builder.io/api/v1/image/assets%2F44729c48b8a1436188bb6ac245b84af3%2F1ae80643c7e34f259f80e82971111485?format=webp&width=800"
-                  alt="Test tyre"
-                  style={{
-                    width: '60px',
-                    height: '60px',
-                    borderRadius: '50%',
-                    position: 'absolute',
-                    top: '10px',
-                    left: '50px',
-                    border: '2px solid #ff0000',
-                    zIndex: 20
-                  }}
-                />
-
-                <RoadTrack />
-              </TyreContainer>
-
-              {/* Enhanced Company Name */}
+            <Box sx={{
+              textAlign: 'center',
+              mb: 1,
+              height: '100%',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'center',
+              px: 2
+            }}>
+              {/* Enhanced Company Name - TOP */}
               <CompanyBranding variant="h3" component="h1">
                 SUPERDOLL
               </CompanyBranding>
@@ -440,14 +420,14 @@ const Login: React.FC = () => {
                 sx={{
                   color: '#424242',
                   fontWeight: 'medium',
-                  mb: 1,
+                  mb: 2,
                   textShadow: '1px 1px 2px rgba(255,255,255,0.5)'
                 }}
               >
                 🚗 Premium Tyre & Auto Parts System
               </Typography>
 
-              <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1, flexWrap: 'wrap', mb: 1 }}>
+              <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1, flexWrap: 'wrap', mb: 2 }}>
                 <Chip
                   label="🔒 Secure"
                   size="small"
@@ -474,11 +454,40 @@ const Login: React.FC = () => {
                   color: '#666',
                   fontSize: '0.8rem',
                   fontStyle: 'italic',
-                  display: 'block'
+                  display: 'block',
+                  mb: 1
                 }}
               >
                 🚗 Watch the tyre roll left to right →
               </Typography>
+
+              {/* Real Tyre with Continuous Horizontal Movement - BOTTOM */}
+              <TyreContainer>
+                <RealTyre
+                  src="https://cdn.builder.io/api/v1/image/assets%2F44729c48b8a1436188bb6ac245b84af3%2F1ae80643c7e34f259f80e82971111485?format=webp&width=800"
+                  alt="Real rotating tyre"
+                  onLoad={() => console.log('Tyre image loaded successfully')}
+                  onError={(e) => console.error('Tyre image failed to load:', e)}
+                />
+
+                {/* Static test tyre for debugging */}
+                <img
+                  src="https://cdn.builder.io/api/v1/image/assets%2F44729c48b8a1436188bb6ac245b84af3%2F1ae80643c7e34f259f80e82971111485?format=webp&width=800"
+                  alt="Test tyre"
+                  style={{
+                    width: '60px',
+                    height: '60px',
+                    borderRadius: '50%',
+                    position: 'absolute',
+                    top: '10px',
+                    left: '50px',
+                    border: '2px solid #ff0000',
+                    zIndex: 20
+                  }}
+                />
+
+                <RoadTrack />
+              </TyreContainer>
             </Box>
           </Grid>
 
