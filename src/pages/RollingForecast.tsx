@@ -262,7 +262,7 @@ const RollingForecast: React.FC = () => {
         console.log('Forecast data persistence loaded - Total items in table:', updatedTableData.length);
       }
     }
-  }, [user, tableData.length]); // Added tableData.length to dependency
+  }, [user, tableData.length, selectedYear]); // Added selectedYear to reload data when year changes
 
   // Auto-save mechanism to persist forecast changes
   useEffect(() => {
