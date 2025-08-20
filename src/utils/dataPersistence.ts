@@ -11,6 +11,7 @@ export interface SavedForecastData {
   createdBy: string;
   createdAt: string;
   lastModified: string;
+  year?: number; // For historical data tracking
   budgetData?: {
     bud25: number;
     ytd25: number;
