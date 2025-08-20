@@ -41,6 +41,14 @@ import AdminDiscountManagement from '../components/AdminDiscountManagement';
 import { ActivityLogger } from '../utils/activityLogger';
 import ManagerActivityDashboard from '../components/ManagerActivityDashboard';
 import MessagingSystem from '../components/MessagingSystem';
+import {
+  getAvailableYears,
+  getDefaultYearSelections,
+  getMonthsForYear,
+  isHistoricalYear,
+  formatYearForDisplay,
+  getCurrentYear
+} from '../utils/timeUtils';
 
 interface MonthlyBudget {
   month: string;
