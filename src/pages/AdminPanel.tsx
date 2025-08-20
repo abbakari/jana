@@ -10,6 +10,7 @@ const AdminPanel: React.FC = () => {
   const { user } = useAuth();
   const [isAdminStockModalOpen, setIsAdminStockModalOpen] = useState(false);
   const [isWorkflowCenterOpen, setIsWorkflowCenterOpen] = useState(false);
+  const [isDiscountManagementOpen, setIsDiscountManagementOpen] = useState(false);
 
   // Sample items for admin stock management
   const sampleItems = [
