@@ -482,8 +482,8 @@ const Login: React.FC = () => {
             </Box>
           </Grid>
 
-          {/* Right Column - Enhanced Login Form and Demo Users */}
-          <Grid item xs={12} md={7}>
+          {/* Right Column - Login Form and Demo Users */}
+          <Grid item xs={12} md={6}>
             {/* Enhanced Login Form */}
             <AdvancedYellowForm elevation={24}>
               <Typography
