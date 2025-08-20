@@ -588,16 +588,16 @@ const Login: React.FC = () => {
                 />
 
                 {error && (
-                  <Alert 
-                    severity="error" 
-                    sx={{ 
-                      mb: 3, 
-                      borderRadius: 2,
+                  <Alert
+                    severity="error"
+                    sx={{
+                      mb: 2,
+                      borderRadius: 1,
                       backgroundColor: 'rgba(255,255,255,0.95)',
-                      border: '2px solid #f44336'
+                      border: '1px solid #f44336'
                     }}
                   >
-                    <Typography variant="body2" fontWeight="bold">
+                    <Typography variant="caption" fontWeight="bold">
                       {error}
                     </Typography>
                   </Alert>
@@ -607,11 +607,10 @@ const Login: React.FC = () => {
                   type="submit"
                   fullWidth
                   variant="contained"
-                  size="large"
                   disabled={isLoading || authLoading}
                   sx={{
-                    py: 2,
-                    fontSize: '1.1rem',
+                    py: 1.5,
+                    fontSize: '1rem',
                     fontWeight: 'bold',
                     borderRadius: 2,
                     background: 'linear-gradient(45deg, #1976D2 0%, #42A5F5 50%, #1976D2 100%)',
