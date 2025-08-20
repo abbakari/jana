@@ -1263,6 +1263,22 @@ const RollingForecast: React.FC = () => {
 
         {/* Summary Statistics */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          {isHistoricalYear(parseInt(selectedYear)) && (
+            <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="flex items-center gap-2">
+                <span className="text-blue-600">📚</span>
+                <span className="text-sm font-medium text-blue-800">
+                  Viewing Historical Data for {selectedYear}
+                </span>
+                <span className="text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded-full">
+                  Read-Only
+                </span>
+              </div>
+              <p className="text-xs text-blue-700 mt-1">
+                Historical data from {selectedYear} is displayed for reference and analysis purposes.
+              </p>
+            </div>
+          )}
           <div className="grid grid-cols-3 gap-4 text-center mb-6">
             <div className="bg-gray-50 rounded-lg p-4">
               <div className="text-sm text-gray-600 mb-1">Budget 2025</div>
