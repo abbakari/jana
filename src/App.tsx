@@ -193,6 +193,11 @@ const AppRoutes: React.FC = () => {
 };
 
 const App: React.FC = () => {
+  useEffect(() => {
+    // Initialize sample activities for testing
+    initializeSampleActivities();
+  }, []);
+
   return (
     <AuthProvider>
       <BudgetProvider>
