@@ -567,8 +567,32 @@ const SalesBudget: React.FC = () => {
           discount: totalDiscount
         } : item;
 
+      // Monitor data integrity before and after update
+      const beforeData = [...originalTableData];
+
       setTableData(prev => prev.map(updateItem));
-      setOriginalTableData(prev => prev.map(updateItem));
+      setOriginalTableData(prev => {
+        const updatedData = prev.map(updateItem);
+
+        // Verify data integrity after update
+        const integrityCheck = DataIntegrityMonitor.monitorDataChange(
+          beforeData,
+          updatedData,
+          user,
+          `BUD 2026 update for ${row?.customer} - ${row?.item}`
+        );
+
+        if (integrityCheck.isDataLoss) {
+          console.error('⚠️ DATA LOSS DETECTED:', integrityCheck.report);
+          console.error('Recommendations:', integrityCheck.recommendations);
+          showNotification('Warning: Data integrity check failed. Please verify all data is preserved.', 'error');
+        } else {
+          console.log('✅ Data integrity verified:', integrityCheck.report);
+          DataIntegrityMonitor.createSnapshot(updatedData, user, `BUD 2026 update completed`);
+        }
+
+        return updatedData;
+      });
 
       console.log('Updated BUD 2026 data for row', rowId, '- Budget Value:', netBudgetValue, 'Units:', budgetValue2026);
 
