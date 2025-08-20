@@ -287,6 +287,12 @@ const AdminPanel: React.FC = () => {
           isOpen={isWorkflowCenterOpen}
           onClose={() => setIsWorkflowCenterOpen(false)}
         />
+
+        {/* Admin Discount Management Modal */}
+        <AdminDiscountManagement
+          isOpen={isDiscountManagementOpen}
+          onClose={() => setIsDiscountManagementOpen(false)}
+        />
       </div>
     </Layout>
   );
