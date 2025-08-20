@@ -50,6 +50,7 @@ export interface SavedBudgetData {
   id: string;
   customer: string;
   item: string;
+  year?: number; // For historical data tracking
   category: string;
   brand: string;
   type: 'sales_budget';
