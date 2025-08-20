@@ -93,9 +93,42 @@ const SalesBudget: React.FC = () => {
   const [activeView, setActiveView] = useState('customer-item');
 
   // Historical year support
-  const [availableYears] = useState(getAvailableYears());
+  const [availableYears, setAvailableYears] = useState(getAvailableYears());
   const [viewingYear, setViewingYear] = useState(getCurrentYear().toString());
   const [showHistoricalComparison, setShowHistoricalComparison] = useState(false);
+
+  // Dynamic time synchronization
+  const { timeState, forceRefresh, currentYear, currentMonth } = useFullTimeSync(
+    // On month change
+    () => {
+      console.log('Month changed in Sales Budget - refreshing monthly data');
+      // Refresh monthly budget data and recalculate totals
+      setEditingMonthlyData({}); // Clear any active edits
+      // Update available years in case we crossed into a new year
+      setAvailableYears(getAvailableYears());
+      // Force re-calculation of monthly data
+      setOriginalTableData(prev => [...prev]);
+    },
+    // On year change
+    () => {
+      console.log('Year changed in Sales Budget - major data refresh');
+      // Update year selections to current year for new year transition
+      const newCurrentYear = getCurrentYear().toString();
+      setSelectedYear2025(newCurrentYear);
+      setSelectedYear2026((getCurrentYear() + 1).toString());
+      setAvailableYears(getAvailableYears());
+      // Clear any temporary states
+      setEditingRowId(null);
+      setEditingMonthlyData({});
+      // Show notification about year transition
+      showNotification(`🎊 Happy New Year! Updated to ${newCurrentYear}`, 'success');
+    },
+    // On any time update
+    (newTimeState) => {
+      // Update page title to reflect current time context
+      document.title = `Sales Budget ${newTimeState.currentYear} - STM Budget`;
+    }
+  );
   const [editingRowId, setEditingRowId] = useState<number | null>(null);
   const [isSubmittingForApproval, setIsSubmittingForApproval] = useState(false);
 
