@@ -1963,9 +1963,9 @@ const SalesBudget: React.FC = () => {
                               <div className="flex flex-col gap-1">
                                 {user?.role === 'manager' ? (
                                   <div className="text-center p-1 bg-gray-100 rounded text-gray-600">
-                                    {Math.round(row.discount)}
+                                    ${Math.round(row.discount)}
                                   </div>
-                                ) : (
+                                ) : user?.role === 'admin' ? (
                                   <input
                                     type="number"
                                     className="w-full p-1 text-center border border-gray-300 rounded text-xs"
@@ -1981,10 +1981,26 @@ const SalesBudget: React.FC = () => {
                                       ));
                                     }}
                                     placeholder="0"
+                                    title="Admin can manually override discount"
                                   />
+                                ) : (
+                                  <div className="text-center p-1 bg-yellow-50 border border-yellow-200 rounded text-yellow-800 text-xs">
+                                    <div className="font-semibold">${Math.round(DiscountCalculator.calculateDiscountAmount(
+                                      row.budget2026 * (row.rate || 1),
+                                      row.category,
+                                      row.brand
+                                    ))}</div>
+                                    <div className="text-xs">Auto-calc</div>
+                                  </div>
                                 )}
-                                <div className="text-xs text-gray-500">
-                                  {((row.discount / (row.budget2026 * row.rate || 1)) * 100).toFixed(1)}%
+                                <div className="flex items-center justify-center gap-1 text-xs text-gray-500 mt-1">
+                                  <span>{user?.role === 'admin'
+                                    ? ((row.discount / (row.budget2026 * row.rate || 1)) * 100).toFixed(1)
+                                    : DiscountCalculator.getDiscountPercentage(row.category, row.brand).toFixed(1)
+                                  }%</span>
+                                  {user?.role !== 'admin' && (
+                                    <span className="text-blue-600" title="Discount auto-calculated based on category and brand">🤖</span>
+                                  )}
                                 </div>
                               </div>
                             </td>
@@ -2181,7 +2197,7 @@ const SalesBudget: React.FC = () => {
                                           }}
                                           className="bg-red-100 text-red-800 px-3 py-1 rounded text-xs hover:bg-red-200 transition-colors"
                                         >
-                                          🗑️ Clear All
+                                          ����️ Clear All
                                         </button>
                                       </div>
                                     </div>
