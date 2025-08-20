@@ -477,20 +477,20 @@ const Login: React.FC = () => {
           <Grid item xs={12} md={7}>
             {/* Enhanced Login Form */}
             <AdvancedYellowForm elevation={24}>
-              <Typography 
-                variant="h5" 
-                component="h3" 
-                sx={{ 
-                  textAlign: 'center', 
-                  mb: 3, 
+              <Typography
+                variant="h6"
+                component="h3"
+                sx={{
+                  textAlign: 'center',
+                  mb: 2,
                   fontWeight: 'bold',
                   color: '#E65100',
                   textShadow: '1px 1px 2px rgba(255,255,255,0.3)'
                 }}
               >
-                🔐 Secure Access Portal
+                🔐 Access Portal
               </Typography>
-              
+
               <Box component="form" onSubmit={handleSubmit}>
                 <TextField
                   fullWidth
@@ -500,7 +500,8 @@ const Login: React.FC = () => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  sx={{ mb: 3 }}
+                  size="small"
+                  sx={{ mb: 2 }}
                   InputProps={{
                     startAdornment: (
                       <InputAdornment position="start">
