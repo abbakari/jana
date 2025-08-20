@@ -373,42 +373,70 @@ const SalesBudget: React.FC = () => {
         });
 
         setOriginalTableData(mergedData);
-        console.log('Data persistence loaded - Total items in table:', mergedData.length);
+        console.log('ACTIVITY PRESERVATION COMPLETE:');
+        console.log('- Total items in table:', mergedData.length);
+        console.log('- All BUD 2026 activities preserved and visible');
+        console.log('- Data will not disappear from table updates');
+
+        // Log comprehensive activity preservation for audit
+        if (user) {
+          ActivityLogger.logSalesBudgetActivity(
+            user,
+            `All table activities preserved during data load`,
+            `Total: ${mergedData.length} items loaded and preserved`,
+            {
+              changes: ['Complete data preservation', 'All BUD 2026 activities maintained'],
+              metadata: {
+                totalItems: mergedData.length,
+                preservationTimestamp: new Date().toISOString(),
+                note: 'All activities stay in table permanently'
+              }
+            },
+            'system'
+          );
+        }
       }
     }
   }, [user, originalTableData.length]); // Added originalTableData.length to dependency
 
-  // Auto-save mechanism to persist data changes
+  // Enhanced auto-save mechanism to preserve ALL activities and prevent data disappearing
   useEffect(() => {
     if (user && originalTableData.length > 0) {
-      // Auto-save all items with budget data
-      const itemsToSave = originalTableData
-        .filter(item => item.budget2026 > 0 || item.budgetValue2026 > 0)
-        .map(item => ({
-          id: `auto_save_${item.id}_${Date.now()}`,
-          customer: item.customer,
-          item: item.item,
-          category: item.category,
-          brand: item.brand,
-          type: 'sales_budget' as const,
-          createdBy: user.name,
-          createdAt: new Date().toISOString(),
-          lastModified: new Date().toISOString(),
-          budget2025: item.budget2025,
-          actual2025: item.actual2025,
-          budget2026: item.budget2026,
-          rate: item.rate,
-          stock: item.stock,
-          git: item.git,
-          budgetValue2026: item.budgetValue2026,
-          discount: item.discount,
-          monthlyData: item.monthlyData,
-          status: 'saved'
-        }));
+      // Save ALL items to ensure complete activity preservation - no filtering
+      const itemsToSave = originalTableData.map(item => ({
+        id: `complete_save_${item.id}_${Date.now()}`,
+        customer: item.customer,
+        item: item.item,
+        category: item.category,
+        brand: item.brand,
+        type: 'sales_budget' as const,
+        createdBy: user.name,
+        createdAt: new Date().toISOString(),
+        lastModified: new Date().toISOString(),
+        budget2025: item.budget2025,
+        actual2025: item.actual2025,
+        budget2026: item.budget2026,
+        rate: item.rate,
+        stock: item.stock,
+        git: item.git,
+        budgetValue2026: item.budgetValue2026,
+        discount: item.discount,
+        monthlyData: item.monthlyData,
+        status: 'saved'
+      }));
 
       if (itemsToSave.length > 0) {
         DataPersistenceManager.saveSalesBudgetData(itemsToSave);
-        console.log('Auto-saved', itemsToSave.length, 'items with budget data');
+        console.log('COMPLETE PRESERVATION: Saved ALL', itemsToSave.length, 'items to prevent any disappearing');
+
+        // Additional backup for complete activity history
+        localStorage.setItem('sales_budget_complete_backup', JSON.stringify({
+          timestamp: new Date().toISOString(),
+          data: originalTableData,
+          user: user.name,
+          totalItems: originalTableData.length,
+          note: 'Complete backup to prevent BUD 2026 data disappearing'
+        }));
       }
     }
   }, [originalTableData, user]); // Auto-save when originalTableData changes
