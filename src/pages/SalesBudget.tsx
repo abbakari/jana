@@ -90,6 +90,11 @@ const SalesBudget: React.FC = () => {
   const [selectedYear2025, setSelectedYear2025] = useState('2025');
   const [selectedYear2026, setSelectedYear2026] = useState('2026');
   const [activeView, setActiveView] = useState('customer-item');
+
+  // Historical year support
+  const [availableYears] = useState(getAvailableYears());
+  const [viewingYear, setViewingYear] = useState(getCurrentYear().toString());
+  const [showHistoricalComparison, setShowHistoricalComparison] = useState(false);
   const [editingRowId, setEditingRowId] = useState<number | null>(null);
   const [isSubmittingForApproval, setIsSubmittingForApproval] = useState(false);
 
