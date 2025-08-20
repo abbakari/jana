@@ -101,6 +101,7 @@ const SalesBudget: React.FC = () => {
   const [isAdminStockModalOpen, setIsAdminStockModalOpen] = useState(false);
   const [isAdminDiscountModalOpen, setIsAdminDiscountModalOpen] = useState(false);
   const [isManagerActivityDashboardOpen, setIsManagerActivityDashboardOpen] = useState(false);
+  const [isMessagingSystemOpen, setIsMessagingSystemOpen] = useState(false);
 
   // Notification state
   const [notification, setNotification] = useState<{message: string, type: 'success' | 'error'} | null>(null);
