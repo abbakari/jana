@@ -942,6 +942,15 @@ const RollingForecast: React.FC = () => {
                 <span>Activity Monitor</span>
               </button>
             )}
+            {/* Messaging System */}
+            <button
+              onClick={() => setIsMessagingSystemOpen(true)}
+              className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
+              title="Open messaging system"
+            >
+              <span>💬</span>
+              <span>Messages</span>
+            </button>
             {/* Follow-backs button for salesman and manager */}
             {(user?.role === 'salesman' || user?.role === 'manager') && (
               <FollowBacksButton />
