@@ -152,6 +152,29 @@ const AdminPanel: React.FC = () => {
             </button>
           </div>
 
+          {/* Discount Management */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                <span className="text-2xl">💰</span>
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">Discount Management</h3>
+                <p className="text-sm text-gray-600">Configure automatic discount rules</p>
+              </div>
+            </div>
+            <p className="text-gray-700 mb-4">
+              Manage automatic discount calculation rules based on category and brand combinations.
+              Rules apply to all sales budget and forecast calculations.
+            </p>
+            <button
+              onClick={() => setIsDiscountManagementOpen(true)}
+              className="w-full bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors"
+            >
+              Manage Discounts
+            </button>
+          </div>
+
           {/* User Management */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
             <div className="flex items-center gap-3 mb-4">
