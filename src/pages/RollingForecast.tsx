@@ -465,6 +465,22 @@ const RollingForecast: React.FC = () => {
           DataPersistenceManager.updateRollingForecastStatus(item.id, 'submitted');
         });
 
+        // Log activity for manager visibility
+        ActivityLogger.logRollingForecastActivity(
+          user,
+          `Submitted ${forecastData.length} forecast(s) for approval`,
+          `Multiple items (${forecastData.length} forecasts)`,
+          {
+            changes: [`Submitted ${forecastData.length} forecasts for approval`],
+            metadata: {
+              workflowId: workflowId.slice(-6),
+              forecastCount: forecastData.length,
+              totalForecastUnits: forecastData.reduce((sum, f) => sum + f.forecastUnits, 0)
+            }
+          },
+          'submit'
+        );
+
         console.log('Rolling forecast data preserved for other purposes:', savedForecastData);
         console.log('Submission copies created for approval workflow');
 
