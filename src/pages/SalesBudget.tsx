@@ -680,6 +680,8 @@ const SalesBudget: React.FC = () => {
 
   // Auto-distribute when user enters quantity in BUD 2026 column
   const handleBudget2026Change = (itemId: number, value: number) => {
+    const row = tableData.find(item => item.id === itemId);
+
     const distributeQuantityEqually = (quantity: number): MonthlyBudget[] => {
       const baseAmount = Math.floor(quantity / 12);
       const remainder = quantity % 12;
@@ -702,14 +704,21 @@ const SalesBudget: React.FC = () => {
           }
         }
 
+        // Auto-calculate discount for each month
+        const discountAmount = row ? DiscountCalculator.calculateDiscountAmount(
+          monthlyValue * (row.rate || 1),
+          row.category,
+          row.brand
+        ) : 0;
+
         return {
           month,
           budgetValue: monthlyValue,
           actualValue: 0,
-          rate: 100,
+          rate: row?.rate || 100,
           stock: 0,
           git: 0,
-          discount: 0
+          discount: discountAmount
         };
       });
     };
