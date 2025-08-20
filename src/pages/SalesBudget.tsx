@@ -452,11 +452,30 @@ const SalesBudget: React.FC = () => {
   };
 
   const handleMonthlyDataChange = (rowId: number, monthIndex: number, field: keyof MonthlyBudget, value: number) => {
+    const row = tableData.find(item => item.id === rowId);
+
     setEditingMonthlyData(prev => ({
       ...prev,
-      [rowId]: prev[rowId]?.map((month, index) => 
-        index === monthIndex ? { ...month, [field]: value } : month
-      ) || []
+      [rowId]: prev[rowId]?.map((month, index) => {
+        if (index === monthIndex) {
+          const updatedMonth = { ...month, [field]: value };
+
+          // Auto-calculate discount when budget value changes
+          if (field === 'budgetValue' && row && value > 0) {
+            const discountAmount = DiscountCalculator.calculateDiscountAmount(
+              value * (row.rate || 1), // Convert units to value
+              row.category,
+              row.brand
+            );
+            updatedMonth.discount = discountAmount;
+
+            console.log(`Auto-calculated discount for ${row.category}/${row.brand}: $${discountAmount.toFixed(2)}`);
+          }
+
+          return updatedMonth;
+        }
+        return month;
+      }) || []
     }));
   };
 
@@ -1405,7 +1424,7 @@ const SalesBudget: React.FC = () => {
               {/* Year Selectors */}
               <div className="bg-white p-3 rounded-lg shadow-sm border-2 border-indigo-400">
                 <label className="block text-xs font-medium text-gray-700 mb-1 flex items-center gap-1">
-                  �� YEARS:
+                  📅 YEARS:
                 </label>
                 <div className="flex gap-1">
                   <select
