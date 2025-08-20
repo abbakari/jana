@@ -95,6 +95,7 @@ const SalesBudget: React.FC = () => {
   const [selectedRowForViewOnly, setSelectedRowForViewOnly] = useState<SalesBudgetItem | null>(null);
   const [isSetDistributionModalOpen, setIsSetDistributionModalOpen] = useState(false);
   const [isAdminStockModalOpen, setIsAdminStockModalOpen] = useState(false);
+  const [isAdminDiscountModalOpen, setIsAdminDiscountModalOpen] = useState(false);
 
   // Notification state
   const [notification, setNotification] = useState<{message: string, type: 'success' | 'error'} | null>(null);
@@ -1404,7 +1405,7 @@ const SalesBudget: React.FC = () => {
               {/* Year Selectors */}
               <div className="bg-white p-3 rounded-lg shadow-sm border-2 border-indigo-400">
                 <label className="block text-xs font-medium text-gray-700 mb-1 flex items-center gap-1">
-                  📅 YEARS:
+                  �� YEARS:
                 </label>
                 <div className="flex gap-1">
                   <select
