@@ -1805,6 +1805,14 @@ const RollingForecast: React.FC = () => {
           onClose={() => setIsStockManagementModalOpen(false)}
         />
       )}
+
+      {/* Manager Activity Dashboard Modal */}
+      {user?.role === 'manager' && (
+        <ManagerActivityDashboard
+          isOpen={isManagerActivityDashboardOpen}
+          onClose={() => setIsManagerActivityDashboardOpen(false)}
+        />
+      )}
     </Layout>
   );
 };
