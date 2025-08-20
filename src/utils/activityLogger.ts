@@ -105,23 +105,27 @@ export class ActivityLogger {
   // Get activities by user role (for managers to see salesman activities)
   static getActivitiesByRole(targetRole: string, viewerRole: string): ActivityLog[] {
     const allActivities = this.getAllActivities();
-    
+
     return allActivities.filter(activity => {
       // Managers can see salesman activities
       if (viewerRole === 'manager' && targetRole === 'salesman') {
         return activity.userRole === 'salesman' && activity.isVisible;
       }
-      
+
       // Supply chain can see manager and salesman activities
       if (viewerRole === 'supply_chain') {
+        if (targetRole === 'all') {
+          // Supply chain can see all activities from salesman and manager
+          return (activity.userRole === 'salesman' || activity.userRole === 'manager') && activity.isVisible;
+        }
         return (activity.userRole === 'salesman' || activity.userRole === 'manager') && activity.isVisible;
       }
-      
+
       // Admin can see everything
       if (viewerRole === 'admin') {
         return activity.isVisible;
       }
-      
+
       return false;
     });
   }
