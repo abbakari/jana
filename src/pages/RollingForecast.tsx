@@ -520,12 +520,46 @@ const RollingForecast: React.FC = () => {
       forecast: 0,
       stock: 0,
       git: 0,
-      eta: ''
+      eta: '',
+      budgetDistribution: {}
     };
 
     setTableData(prev => [...prev, newTableRow]);
 
-    console.log('New customer-item combination added:', combination);
+    // Immediately save the new item to persistence to ensure it doesn't disappear
+    if (user) {
+      const savedData = {
+        id: `new_item_${newTableRow.id}_${Date.now()}`,
+        customer: combination.customerName,
+        item: combination.itemName,
+        category: 'TYRE SERVICE',
+        brand: 'Various',
+        type: 'rolling_forecast' as const,
+        createdBy: user.name,
+        createdAt: new Date().toISOString(),
+        lastModified: new Date().toISOString(),
+        budgetData: {
+          bud25: 0,
+          ytd25: 0,
+          budget2026: 0,
+          rate: 100,
+          stock: 0,
+          git: 0,
+          eta: '',
+          budgetValue2026: 0,
+          discount: 0,
+          monthlyData: []
+        },
+        forecastData: {},
+        forecastTotal: 0,
+        status: 'saved'
+      };
+
+      DataPersistenceManager.saveRollingForecastData([savedData]);
+      console.log('New item immediately saved to prevent disappearing:', savedData);
+    }
+
+    console.log('New customer-item combination added and persisted:', combination);
     console.log('New table row added:', newTableRow);
   };
 
