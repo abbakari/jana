@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { initializeSampleActivities } from './utils/initializeSampleActivities';
 import { AuthProvider, useAuth, canAccessDashboard } from './contexts/AuthContext';
 import { BudgetProvider } from './contexts/BudgetContext';
 import { WorkflowProvider } from './contexts/WorkflowContext';
@@ -11,6 +12,7 @@ import RollingForecast from './pages/RollingForecast';
 import UserManagement from './pages/UserManagement';
 import DataSources from './pages/DataSources';
 import SupplyChainManagement from './pages/SupplyChainManagement';
+import SupplyChainDashboard from './pages/SupplyChainDashboard';
 import DistributionManagement from './pages/DistributionManagement';
 import BiDashboard from './pages/BiDashboard';
 import ApprovalCenter from './pages/ApprovalCenter';
@@ -103,6 +105,15 @@ const AppRoutes: React.FC = () => {
 
       {/* Supply Chain Routes */}
       <Route
+        path="/supply-chain-dashboard"
+        element={
+          <RoleBasedRoute allowedRoles={['supply_chain', 'admin']}>
+            <SupplyChainDashboard />
+          </RoleBasedRoute>
+        }
+      />
+
+      <Route
         path="/inventory-management"
         element={
           <RoleBasedRoute allowedRoles={['supply_chain', 'admin']}>
@@ -111,13 +122,13 @@ const AppRoutes: React.FC = () => {
         }
       />
 
-      <Route 
-        path="/distribution-management" 
+      <Route
+        path="/distribution-management"
         element={
           <RoleBasedRoute allowedRoles={['supply_chain', 'admin']}>
             <DistributionManagement />
           </RoleBasedRoute>
-        } 
+        }
       />
 
       {/* Admin Routes */}
@@ -182,6 +193,11 @@ const AppRoutes: React.FC = () => {
 };
 
 const App: React.FC = () => {
+  useEffect(() => {
+    // Initialize sample activities for testing
+    initializeSampleActivities();
+  }, []);
+
   return (
     <AuthProvider>
       <BudgetProvider>

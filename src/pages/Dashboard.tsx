@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
 import StatsCard from '../components/StatsCard';
-import { PieChartIcon, TrendingUp, Clock, Download, RefreshCw, BarChart3, Target, AlertTriangle, Users, Package, Building, Truck, Eye, MessageSquare } from 'lucide-react';
+import { PieChartIcon, TrendingUp, Clock, Download, RefreshCw, BarChart3, Target, AlertTriangle, Users, Package, Building, Truck, Eye, MessageSquare, Activity } from 'lucide-react';
 import ExportModal, { ExportConfig } from '../components/ExportModal';
 import GitEtaManagement from '../components/GitEtaManagement';
 import ManagerDataView from '../components/ManagerDataView';
@@ -406,6 +406,13 @@ const Dashboard: React.FC = () => {
 
       case 'supply_chain':
         return [
+          {
+            icon: Activity,
+            title: 'Supply Chain Dashboard',
+            description: 'Monitor all team activities and communicate',
+            color: 'indigo-600',
+            onClick: () => navigate('/supply-chain-dashboard')
+          },
           {
             icon: Package,
             title: 'Inventory Management',

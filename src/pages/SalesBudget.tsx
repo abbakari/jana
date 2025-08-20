@@ -15,7 +15,9 @@ import {
   Calendar,
   Send,
   Package,
-  Users
+  Users,
+  Activity,
+  MessageCircle
 } from 'lucide-react';
 import ExportModal, { ExportConfig } from '../components/ExportModal';
 import NewAdditionModal, { NewItemData } from '../components/NewAdditionModal';
@@ -34,6 +36,11 @@ import AdminStockManagement from '../components/AdminStockManagement';
 import StockSummaryWidget from '../components/StockSummaryWidget';
 import DataPersistenceManager, { SavedBudgetData } from '../utils/dataPersistence';
 import { initializeSampleGitData } from '../utils/sampleGitData';
+import { DiscountCalculator } from '../utils/discountCalculations';
+import AdminDiscountManagement from '../components/AdminDiscountManagement';
+import { ActivityLogger } from '../utils/activityLogger';
+import ManagerActivityDashboard from '../components/ManagerActivityDashboard';
+import MessagingSystem from '../components/MessagingSystem';
 
 interface MonthlyBudget {
   month: string;
@@ -93,6 +100,9 @@ const SalesBudget: React.FC = () => {
   const [selectedRowForViewOnly, setSelectedRowForViewOnly] = useState<SalesBudgetItem | null>(null);
   const [isSetDistributionModalOpen, setIsSetDistributionModalOpen] = useState(false);
   const [isAdminStockModalOpen, setIsAdminStockModalOpen] = useState(false);
+  const [isAdminDiscountModalOpen, setIsAdminDiscountModalOpen] = useState(false);
+  const [isManagerActivityDashboardOpen, setIsManagerActivityDashboardOpen] = useState(false);
+  const [isMessagingSystemOpen, setIsMessagingSystemOpen] = useState(false);
 
   // Notification state
   const [notification, setNotification] = useState<{message: string, type: 'success' | 'error'} | null>(null);
@@ -306,16 +316,23 @@ const SalesBudget: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // Load saved salesman data for current user
+  // Load saved salesman data for current user and ensure persistence
   useEffect(() => {
-    if (user) {
+    if (user && originalTableData.length > 0) {
       const savedBudgetData = DataPersistenceManager.getSalesBudgetDataByUser(user.name);
       if (savedBudgetData.length > 0) {
         console.log('Loading saved budget data for', user.name, ':', savedBudgetData.length, 'items');
 
-        // Merge saved data with original table data
-        const mergedData = [...originalTableData];
+        // Create a map of saved data for quick lookup
+        const savedDataMap = new Map(savedBudgetData.map(item =>
+          [`${item.customer}_${item.item}`, item]
+        ));
 
+        // Merge saved data with original table data, ensuring all saved items are preserved
+        const mergedData = [...originalTableData];
+        const existingKeys = new Set(mergedData.map(item => `${item.customer}_${item.item}`));
+
+        // Update existing items with saved data
         savedBudgetData.forEach(savedItem => {
           const existingIndex = mergedData.findIndex(item =>
             item.customer === savedItem.customer && item.item === savedItem.item
@@ -331,9 +348,9 @@ const SalesBudget: React.FC = () => {
               monthlyData: savedItem.monthlyData
             };
           } else {
-            // Add new item from saved data
+            // Add new item from saved data (this ensures new additions are preserved)
             const newItem = {
-              id: Math.max(...mergedData.map(item => item.id)) + 1,
+              id: Math.max(0, ...mergedData.map(item => item.id)) + 1,
               selected: false,
               customer: savedItem.customer,
               item: savedItem.item,
@@ -351,13 +368,50 @@ const SalesBudget: React.FC = () => {
               monthlyData: savedItem.monthlyData
             };
             mergedData.push(newItem);
+            console.log('Added new item from saved data:', newItem.customer, '-', newItem.item);
           }
         });
 
         setOriginalTableData(mergedData);
+        console.log('Data persistence loaded - Total items in table:', mergedData.length);
       }
     }
-  }, [user]);
+  }, [user, originalTableData.length]); // Added originalTableData.length to dependency
+
+  // Auto-save mechanism to persist data changes
+  useEffect(() => {
+    if (user && originalTableData.length > 0) {
+      // Auto-save all items with budget data
+      const itemsToSave = originalTableData
+        .filter(item => item.budget2026 > 0 || item.budgetValue2026 > 0)
+        .map(item => ({
+          id: `auto_save_${item.id}_${Date.now()}`,
+          customer: item.customer,
+          item: item.item,
+          category: item.category,
+          brand: item.brand,
+          type: 'sales_budget' as const,
+          createdBy: user.name,
+          createdAt: new Date().toISOString(),
+          lastModified: new Date().toISOString(),
+          budget2025: item.budget2025,
+          actual2025: item.actual2025,
+          budget2026: item.budget2026,
+          rate: item.rate,
+          stock: item.stock,
+          git: item.git,
+          budgetValue2026: item.budgetValue2026,
+          discount: item.discount,
+          monthlyData: item.monthlyData,
+          status: 'saved'
+        }));
+
+      if (itemsToSave.length > 0) {
+        DataPersistenceManager.saveSalesBudgetData(itemsToSave);
+        console.log('Auto-saved', itemsToSave.length, 'items with budget data');
+      }
+    }
+  }, [originalTableData, user]); // Auto-save when originalTableData changes
 
   // Add event listeners for filter changes
   useEffect(() => {
@@ -405,11 +459,30 @@ const SalesBudget: React.FC = () => {
   };
 
   const handleMonthlyDataChange = (rowId: number, monthIndex: number, field: keyof MonthlyBudget, value: number) => {
+    const row = tableData.find(item => item.id === rowId);
+
     setEditingMonthlyData(prev => ({
       ...prev,
-      [rowId]: prev[rowId]?.map((month, index) => 
-        index === monthIndex ? { ...month, [field]: value } : month
-      ) || []
+      [rowId]: prev[rowId]?.map((month, index) => {
+        if (index === monthIndex) {
+          const updatedMonth = { ...month, [field]: value };
+
+          // Auto-calculate discount when budget value changes
+          if (field === 'budgetValue' && row && value > 0) {
+            const discountAmount = DiscountCalculator.calculateDiscountAmount(
+              value * (row.rate || 1), // Convert units to value
+              row.category,
+              row.brand
+            );
+            updatedMonth.discount = discountAmount;
+
+            console.log(`Auto-calculated discount for ${row.category}/${row.brand}: $${discountAmount.toFixed(2)}`);
+          }
+
+          return updatedMonth;
+        }
+        return month;
+      }) || []
     }));
   };
 
@@ -476,6 +549,22 @@ const SalesBudget: React.FC = () => {
 
         DataPersistenceManager.saveSalesBudgetData([savedData]);
         console.log('Budget data saved for manager visibility and preserved for other purposes:', savedData);
+      }
+
+      // Log activity for manager visibility
+      if (user) {
+        ActivityLogger.logSalesBudgetActivity(
+          user,
+          `Updated monthly budget distribution`,
+          `${row?.customer} - ${row?.item}`,
+          {
+            changes: ['Monthly budget values updated', `Total units: ${budgetValue2026}`, `Net value: $${netBudgetValue.toLocaleString()}`],
+            before: { budgetValue2026: row?.budgetValue2026 || 0 },
+            after: { budgetValue2026: netBudgetValue },
+            metadata: { totalUnits: budgetValue2026, totalDiscount, monthlyData: updatedMonthlyData }
+          },
+          'update'
+        );
       }
 
       showNotification(`Monthly budget data saved for row ${rowId}. Net value: $${netBudgetValue.toLocaleString()} (after $${totalDiscount.toLocaleString()} discount). Data preserved in table and visible to managers.`, 'success');
@@ -614,6 +703,8 @@ const SalesBudget: React.FC = () => {
 
   // Auto-distribute when user enters quantity in BUD 2026 column
   const handleBudget2026Change = (itemId: number, value: number) => {
+    const row = tableData.find(item => item.id === itemId);
+
     const distributeQuantityEqually = (quantity: number): MonthlyBudget[] => {
       const baseAmount = Math.floor(quantity / 12);
       const remainder = quantity % 12;
@@ -636,14 +727,21 @@ const SalesBudget: React.FC = () => {
           }
         }
 
+        // Auto-calculate discount for each month
+        const discountAmount = row ? DiscountCalculator.calculateDiscountAmount(
+          monthlyValue * (row.rate || 1),
+          row.category,
+          row.brand
+        ) : 0;
+
         return {
           month,
           budgetValue: monthlyValue,
           actualValue: 0,
-          rate: 100,
+          rate: row?.rate || 100,
           stock: 0,
           git: 0,
-          discount: 0
+          discount: discountAmount
         };
       });
     };
@@ -652,12 +750,14 @@ const SalesBudget: React.FC = () => {
       prevData.map(item => {
         if (item.id === itemId) {
           const newMonthlyData = distributeQuantityEqually(value);
-          const newBudgetValue2026 = value * (item.rate || 1);
+          const totalDiscountAmount = newMonthlyData.reduce((sum, month) => sum + month.discount, 0);
+          const newBudgetValue2026 = (value * (item.rate || 1)) - totalDiscountAmount;
 
           return {
             ...item,
             budget2026: value,
             budgetValue2026: newBudgetValue2026,
+            discount: totalDiscountAmount,
             monthlyData: newMonthlyData
           };
         }
@@ -775,7 +875,7 @@ const SalesBudget: React.FC = () => {
       showNotification(`Customer "${itemData.customerName}" added successfully`, 'success');
     } else {
       // Add new item to original data
-      const newId = Math.max(...originalTableData.map(item => item.id)) + 1;
+      const newId = Math.max(0, ...originalTableData.map(item => item.id)) + 1;
       const newRow: SalesBudgetItem = {
         id: newId,
         selected: false,
@@ -803,13 +903,59 @@ const SalesBudget: React.FC = () => {
         }))
       };
       setOriginalTableData(prev => [...prev, newRow]);
-      showNotification(`Item "${itemData.itemName}" added successfully`, 'success');
+
+      // Immediately save the new item to persistence to ensure it doesn't disappear
+      if (user) {
+        const savedData = {
+          id: `new_budget_item_${newId}_${Date.now()}`,
+          customer: newRow.customer,
+          item: newRow.item,
+          category: newRow.category,
+          brand: newRow.brand,
+          type: 'sales_budget' as const,
+          createdBy: user.name,
+          createdAt: new Date().toISOString(),
+          lastModified: new Date().toISOString(),
+          budget2025: newRow.budget2025,
+          actual2025: newRow.actual2025,
+          budget2026: newRow.budget2026,
+          rate: newRow.rate,
+          stock: newRow.stock,
+          git: newRow.git,
+          budgetValue2026: newRow.budgetValue2026,
+          discount: newRow.discount,
+          monthlyData: newRow.monthlyData,
+          status: 'saved'
+        };
+
+        DataPersistenceManager.saveSalesBudgetData([savedData]);
+        console.log('New item immediately saved to prevent disappearing:', savedData);
+
+        // Log activity for manager visibility
+        ActivityLogger.logSalesBudgetActivity(
+          user,
+          `Added new item to sales budget`,
+          `${newRow.customer} - ${newRow.item}`,
+          {
+            changes: ['New item created'],
+            metadata: {
+              category: newRow.category,
+              brand: newRow.brand,
+              rate: newRow.rate,
+              stock: newRow.stock
+            }
+          },
+          'create'
+        );
+      }
+
+      showNotification(`Item "${itemData.itemName}" added successfully and saved`, 'success');
     }
   };
 
   const handleAddCustomerItemCombination = (combination: any) => {
     // Add new customer-item combination to original data
-    const newId = Math.max(...originalTableData.map(item => item.id)) + 1;
+    const newId = Math.max(0, ...originalTableData.map(item => item.id)) + 1;
     const newRow: SalesBudgetItem = {
       id: newId,
       selected: false,
@@ -838,7 +984,36 @@ const SalesBudget: React.FC = () => {
     };
 
     setOriginalTableData(prev => [...prev, newRow]);
-    showNotification(`Customer-Item combination "${combination.customerName} - ${combination.itemName}" added successfully`, 'success');
+
+    // Immediately save the new combination to persistence to ensure it doesn't disappear
+    if (user) {
+      const savedData = {
+        id: `new_combination_${newId}_${Date.now()}`,
+        customer: newRow.customer,
+        item: newRow.item,
+        category: newRow.category,
+        brand: newRow.brand,
+        type: 'sales_budget' as const,
+        createdBy: user.name,
+        createdAt: new Date().toISOString(),
+        lastModified: new Date().toISOString(),
+        budget2025: newRow.budget2025,
+        actual2025: newRow.actual2025,
+        budget2026: newRow.budget2026,
+        rate: newRow.rate,
+        stock: newRow.stock,
+        git: newRow.git,
+        budgetValue2026: newRow.budgetValue2026,
+        discount: newRow.discount,
+        monthlyData: newRow.monthlyData,
+        status: 'saved'
+      };
+
+      DataPersistenceManager.saveSalesBudgetData([savedData]);
+      console.log('New customer-item combination immediately saved to prevent disappearing:', savedData);
+    }
+
+    showNotification(`Customer-Item combination "${combination.customerName} - ${combination.itemName}" added successfully and saved`, 'success');
   };
 
 
@@ -978,6 +1153,22 @@ const SalesBudget: React.FC = () => {
         DataPersistenceManager.updateSalesBudgetStatus(item.id, 'submitted');
       });
 
+      // Log activity for manager visibility
+      ActivityLogger.logSalesBudgetActivity(
+        user,
+        `Submitted ${allBudgets.length} budget(s) for approval`,
+        `Multiple items (${allBudgets.length} budgets)`,
+        {
+          changes: [`Submitted ${allBudgets.length} budgets for approval`],
+          metadata: {
+            workflowId: workflowId.slice(-6),
+            budgetCount: allBudgets.length,
+            totalValue: tableBudgets.reduce((sum, b) => sum + b.totalBudget, 0)
+          }
+        },
+        'submit'
+      );
+
       showNotification(
         `Successfully submitted ${allBudgets.length} budget(s) for manager approval. ` +
         `Workflow ID: ${workflowId.slice(-6)}. ✅ Original data preserved in table for other purposes.`,
@@ -1024,7 +1215,7 @@ const SalesBudget: React.FC = () => {
     ? tableData.reduce((sum, item) => sum + Math.floor(item.actual2025 / (item.rate || 1)), 0)
     : 0;
 
-  const budgetGrowth = totalBudget2025 > 0 ? ((totalBudget2026 - totalBudget2025) / totalBudget2025) * 100 : 0;
+  const budgetGrowth = totalBudget2025 > 0 ? Math.max(0, ((totalBudget2026 - totalBudget2025) / totalBudget2025) * 100) : 0;
 
   return (
     <Layout>
@@ -1091,14 +1282,24 @@ const SalesBudget: React.FC = () => {
                   <span>Set Distribution</span>
                 </button>
                 {user?.role === 'admin' && (
-                  <button
-                    onClick={() => setIsAdminStockModalOpen(true)}
-                    className="bg-red-600 text-white font-semibold px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-red-700 transition-colors transform hover:scale-105 active:scale-95"
-                    title="Manage global stock quantities for all users"
-                  >
-                    <Package className="w-5 h-5" />
-                    <span>Admin Stock</span>
-                  </button>
+                  <>
+                    <button
+                      onClick={() => setIsAdminDiscountModalOpen(true)}
+                      className="bg-purple-600 text-white font-semibold px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-purple-700 transition-colors transform hover:scale-105 active:scale-95"
+                      title="Manage automatic discount calculation rules"
+                    >
+                      <span>💰</span>
+                      <span>Admin Discounts</span>
+                    </button>
+                    <button
+                      onClick={() => setIsAdminStockModalOpen(true)}
+                      className="bg-red-600 text-white font-semibold px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-red-700 transition-colors transform hover:scale-105 active:scale-95"
+                      title="Manage global stock quantities for all users"
+                    >
+                      <Package className="w-5 h-5" />
+                      <span>Admin Stock</span>
+                    </button>
+                  </>
                 )}
                 <button
                   onClick={handleDownloadBudget}
@@ -1400,6 +1601,17 @@ const SalesBudget: React.FC = () => {
                       </button>
                       <button
                         onClick={() => {
+                          console.log('Activity Monitor button clicked');
+                          setIsManagerActivityDashboardOpen(true);
+                        }}
+                        className="bg-blue-100 text-blue-800 font-semibold px-2 py-1 rounded-md text-xs flex items-center gap-1 hover:bg-blue-200 transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-sm hover:shadow-md"
+                        title="Monitor all salesman activities (Managers only)"
+                      >
+                        <Activity className="w-4 h-4" />
+                        <span>Activity Monitor</span>
+                      </button>
+                      <button
+                        onClick={() => {
                           const selectedBudgets = tableData.filter(row => row.selected && row.budgetValue2026 > 0);
                           if (selectedBudgets.length === 0) {
                             showNotification('Please select budget items with values to send to supply chain', 'error');
@@ -1433,6 +1645,16 @@ const SalesBudget: React.FC = () => {
                       </button>
                     </>
                   )}
+
+                  {/* Messaging System - Available to all users */}
+                  <button
+                    onClick={() => setIsMessagingSystemOpen(true)}
+                    className="bg-green-100 text-green-800 font-semibold px-2 py-1 rounded-md text-xs flex items-center gap-1 hover:bg-green-200 transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-sm hover:shadow-md"
+                    title="Open messaging system to communicate with team"
+                  >
+                    <MessageCircle className="w-4 h-4" />
+                    <span>Messages</span>
+                  </button>
 
                   {/* Follow-backs button for salesman and manager */}
                   {(user?.role === 'salesman' || user?.role === 'manager') && (
@@ -1526,7 +1748,6 @@ const SalesBudget: React.FC = () => {
                         : 'text-gray-500'
                   }`}>
                     {budgetGrowth > 0 && '📈'}
-                    {budgetGrowth < 0 && '📉'}
                     {budgetGrowth === 0 && '��️'}
                     {budgetGrowth.toFixed(1)}%
                   </p>
@@ -1830,9 +2051,9 @@ const SalesBudget: React.FC = () => {
                               <div className="flex flex-col gap-1">
                                 {user?.role === 'manager' ? (
                                   <div className="text-center p-1 bg-gray-100 rounded text-gray-600">
-                                    {Math.round(row.discount)}
+                                    ${Math.round(row.discount)}
                                   </div>
-                                ) : (
+                                ) : user?.role === 'admin' ? (
                                   <input
                                     type="number"
                                     className="w-full p-1 text-center border border-gray-300 rounded text-xs"
@@ -1848,10 +2069,26 @@ const SalesBudget: React.FC = () => {
                                       ));
                                     }}
                                     placeholder="0"
+                                    title="Admin can manually override discount"
                                   />
+                                ) : (
+                                  <div className="text-center p-1 bg-yellow-50 border border-yellow-200 rounded text-yellow-800 text-xs">
+                                    <div className="font-semibold">${Math.round(DiscountCalculator.calculateDiscountAmount(
+                                      row.budget2026 * (row.rate || 1),
+                                      row.category,
+                                      row.brand
+                                    ))}</div>
+                                    <div className="text-xs">Auto-calc</div>
+                                  </div>
                                 )}
-                                <div className="text-xs text-gray-500">
-                                  {((row.discount / (row.budget2026 * row.rate || 1)) * 100).toFixed(1)}%
+                                <div className="flex items-center justify-center gap-1 text-xs text-gray-500 mt-1">
+                                  <span>{user?.role === 'admin'
+                                    ? ((row.discount / (row.budget2026 * row.rate || 1)) * 100).toFixed(1)
+                                    : DiscountCalculator.getDiscountPercentage(row.category, row.brand).toFixed(1)
+                                  }%</span>
+                                  {user?.role !== 'admin' && (
+                                    <span className="text-blue-600" title="Discount auto-calculated based on category and brand">🤖</span>
+                                  )}
                                 </div>
                               </div>
                             </td>
@@ -1927,18 +2164,134 @@ const SalesBudget: React.FC = () => {
                                         </button>
                                         <button
                                           onClick={() => {
-                                            const seasonalMultipliers = [0.8, 0.8, 0.9, 0.9, 1.0, 1.0, 1.1, 1.1, 1.2, 1.2, 1.3, 1.4];
                                             const totalBudget = editingMonthlyData[row.id]?.reduce((sum, month) => sum + month.budgetValue, 0) || 0;
+                                            const itemValue = totalBudget * (row.rate || 1); // Calculate total monetary value
+
+                                            // Define holiday-heavy months (typically lower sales due to holidays/vacation periods)
+                                            // Index: 0=Jan, 1=Feb, 2=Mar, 3=Apr, 4=May, 5=Jun, 6=Jul, 7=Aug, 8=Sep, 9=Oct, 10=Nov, 11=Dec
+                                            const holidayMonths = [0, 6, 7, 11]; // Jan (New Year), Jul (Summer), Aug (Summer), Dec (Christmas)
+                                            const nonHolidayMonths = [1, 2, 3, 4, 5, 8, 9, 10]; // Feb, Mar, Apr, May, Jun, Sep, Oct, Nov
+
+                                            // Smart threshold: Large items ($50,000+ value) go to non-holiday months
+                                            // Small items (under $50,000) can be distributed to holiday months
+                                            const isLargeItem = itemValue >= 50000;
+
+                                            let distributionStrategy;
+
+                                            if (isLargeItem) {
+                                              // Large items: Focus on non-holiday months for maximum sales potential
+                                              // Heavily concentrate on business-active months
+                                              distributionStrategy = [
+                                                0.5,  // Jan (holiday) - very low due to New Year
+                                                1.5,  // Feb (non-holiday) - high activity
+                                                1.4,  // Mar (non-holiday) - strong quarter end
+                                                1.3,  // Apr (non-holiday) - Q2 start
+                                                1.4,  // May (non-holiday) - peak business
+                                                1.3,  // Jun (non-holiday) - Q2 end push
+                                                0.4,  // Jul (holiday) - summer break
+                                                0.4,  // Aug (holiday) - summer break
+                                                1.5,  // Sep (non-holiday) - back to business
+                                                1.4,  // Oct (non-holiday) - Q4 start
+                                                1.3,  // Nov (non-holiday) - pre-holiday push
+                                                0.3   // Dec (holiday) - Christmas/year-end - lowest
+                                              ];
+                                            } else {
+                                              // Small items: More balanced but still avoid peak holiday months
+                                              // Allow some holiday distribution but keep December lowest
+                                              distributionStrategy = [
+                                                0.8,  // Jan (holiday) - moderate due to New Year
+                                                1.1,  // Feb (non-holiday) - steady
+                                                1.0,  // Mar (non-holiday) - normal
+                                                1.1,  // Apr (non-holiday) - steady
+                                                1.0,  // May (non-holiday) - normal
+                                                1.1,  // Jun (non-holiday) - steady
+                                                0.9,  // Jul (holiday) - slightly reduced summer
+                                                0.9,  // Aug (holiday) - slightly reduced summer
+                                                1.1,  // Sep (non-holiday) - steady
+                                                1.0,  // Oct (non-holiday) - normal
+                                                1.0,  // Nov (non-holiday) - normal
+                                                0.6   // Dec (holiday) - significantly reduced for Christmas
+                                              ];
+                                            }
+
+                                            // Apply business intelligence: boost productive months only
+                                            // Avoid boosting December to prevent it from getting high allocation
+                                            const businessBoostMultipliers = [
+                                              1.0,  // Jan - no boost due to holiday
+                                              1.1,  // Feb - slight boost for post-holiday activity
+                                              1.1,  // Mar - Q1 end boost
+                                              1.2,  // Apr - Q2 start boost
+                                              1.1,  // May - mid-year steady
+                                              1.2,  // Jun - Q2 end boost
+                                              1.0,  // Jul - no boost due to summer
+                                              1.0,  // Aug - no boost due to summer
+                                              1.1,  // Sep - back to business boost
+                                              1.2,  // Oct - Q4 start boost
+                                              1.2,  // Nov - pre-holiday business boost
+                                              0.8   // Dec - negative adjustment to ensure lowest allocation
+                                            ];
+
+                                            // Combine strategies for intelligent distribution
+                                            const finalMultipliers = distributionStrategy.map((seasonal, index) =>
+                                              seasonal * businessBoostMultipliers[index]
+                                            );
+
+                                            // Normalize to ensure total equals original budget
+                                            const multiplierSum = finalMultipliers.reduce((sum, mult) => sum + mult, 0);
+                                            const normalizedMultipliers = finalMultipliers.map(mult => mult / multiplierSum * 12);
+
                                             const baseValue = totalBudget / 12;
                                             setEditingMonthlyData(prev => ({
                                               ...prev,
-                                              [row.id]: prev[row.id]?.map((month, index) => ({
-                                                ...month,
-                                                budgetValue: Math.round(baseValue * seasonalMultipliers[index])
-                                              })) || []
+                                              [row.id]: prev[row.id]?.map((month, index) => {
+                                                const budgetValue = Math.round(baseValue * normalizedMultipliers[index]);
+                                                const discountAmount = DiscountCalculator.calculateDiscountAmount(
+                                                  budgetValue * (row.rate || 1),
+                                                  row.category,
+                                                  row.brand
+                                                );
+
+                                                return {
+                                                  ...month,
+                                                  budgetValue,
+                                                  discount: discountAmount
+                                                };
+                                              }) || []
                                             }));
+
+                                            // Log activity for manager visibility
+                                            if (user) {
+                                              ActivityLogger.logSalesBudgetActivity(
+                                                user,
+                                                `Applied seasonal growth distribution`,
+                                                `${row.customer} - ${row.item}`,
+                                                {
+                                                  changes: ['Seasonal growth distribution applied'],
+                                                  metadata: {
+                                                    strategy: isLargeItem ? 'Large Item Strategy' : 'Small Item Strategy',
+                                                    totalBudget,
+                                                    itemValue,
+                                                    isLargeItem
+                                                  }
+                                                },
+                                                'update'
+                                              );
+                                            }
+
+                                            // Show notification about the strategy applied
+                                            const strategy = isLargeItem ? 'Large Item Strategy' : 'Small Item Strategy';
+                                            const explanation = isLargeItem
+                                              ? 'Concentrated on non-holiday months, December gets minimal allocation'
+                                              : 'Balanced distribution with December kept low for holiday period';
+
+                                            // Calculate December's percentage for verification
+                                            const decemberIndex = 11;
+                                            const decemberPercentage = ((normalizedMultipliers[decemberIndex] / 12) * 100).toFixed(1);
+
+                                            showNotification(`${strategy}: ${explanation}. December: ${decemberPercentage}% of total`, 'success');
                                           }}
                                           className="bg-green-100 text-green-800 px-3 py-1 rounded text-xs hover:bg-green-200 transition-colors"
+                                          title="Smart seasonal distribution: Large items focused on non-holiday months, small items balanced across all months"
                                         >
                                           📈 Seasonal Growth
                                         </button>
@@ -1951,7 +2304,7 @@ const SalesBudget: React.FC = () => {
                                           }}
                                           className="bg-red-100 text-red-800 px-3 py-1 rounded text-xs hover:bg-red-200 transition-colors"
                                         >
-                                          🗑️ Clear All
+                                          ����️ Clear All
                                         </button>
                                       </div>
                                     </div>
@@ -2171,6 +2524,28 @@ const SalesBudget: React.FC = () => {
             items={tableData}
           />
         )}
+
+        {/* Admin Discount Management Modal */}
+        {user?.role === 'admin' && (
+          <AdminDiscountManagement
+            isOpen={isAdminDiscountModalOpen}
+            onClose={() => setIsAdminDiscountModalOpen(false)}
+          />
+        )}
+
+        {/* Manager Activity Dashboard Modal */}
+        {user?.role === 'manager' && (
+          <ManagerActivityDashboard
+            isOpen={isManagerActivityDashboardOpen}
+            onClose={() => setIsManagerActivityDashboardOpen(false)}
+          />
+        )}
+
+        {/* Messaging System Modal */}
+        <MessagingSystem
+          isOpen={isMessagingSystemOpen}
+          onClose={() => setIsMessagingSystemOpen(false)}
+        />
       </div>
     </Layout>
   );

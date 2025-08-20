@@ -17,6 +17,9 @@ import RollingForecastReport from '../components/RollingForecastReport';
 import AddCustomerItemModal from '../components/AddCustomerItemModal';
 import DataPersistenceManager, { SavedForecastData } from '../utils/dataPersistence';
 import { initializeSampleGitData } from '../utils/sampleGitData';
+import { ActivityLogger } from '../utils/activityLogger';
+import ManagerActivityDashboard from '../components/ManagerActivityDashboard';
+import MessagingSystem from '../components/MessagingSystem';
 import {
   getCurrentMonth,
   getCurrentYear,
@@ -49,6 +52,8 @@ const RollingForecast: React.FC = () => {
   const [selectedRowForViewOnly, setSelectedRowForViewOnly] = useState<any>(null);
   const [isStockManagementModalOpen, setIsStockManagementModalOpen] = useState(false);
   const [showReportView, setShowReportView] = useState(false);
+  const [isManagerActivityDashboardOpen, setIsManagerActivityDashboardOpen] = useState(false);
+  const [isMessagingSystemOpen, setIsMessagingSystemOpen] = useState(false);
 
   // Sample data
   const [customers, setCustomers] = useState<Customer[]>([
@@ -180,26 +185,48 @@ const RollingForecast: React.FC = () => {
     }
   ]);
 
-  // Load saved forecast data for current user
+  // Load saved forecast data for current user and ensure persistence
   useEffect(() => {
-    if (user) {
+    if (user && tableData.length > 0) {
       const savedForecastData = DataPersistenceManager.getRollingForecastDataByUser(user.name);
       if (savedForecastData.length > 0) {
         console.log('Loading saved forecast data for', user.name, ':', savedForecastData.length, 'items');
 
         // Update monthly forecast data from saved data
         const updatedMonthlyData: {[key: string]: {[month: string]: number}} = {};
+        const updatedTableData = [...tableData];
 
         savedForecastData.forEach(savedItem => {
-          const matchingRow = tableData.find(row =>
+          let matchingRow = tableData.find(row =>
             row.customer === savedItem.customer && row.item === savedItem.item
           );
+
+          if (!matchingRow) {
+            // Add new row from saved data if it doesn't exist in table
+            const newRowId = (tableData.length + 1).toString();
+            const newRow = {
+              id: newRowId,
+              customer: savedItem.customer,
+              item: savedItem.item,
+              bud25: savedItem.budgetData?.bud25 || 0,
+              ytd25: savedItem.budgetData?.ytd25 || 0,
+              forecast: savedItem.forecastTotal || 0,
+              stock: savedItem.budgetData?.stock || 0,
+              git: savedItem.budgetData?.git || 0,
+              eta: savedItem.budgetData?.eta || '',
+              budgetDistribution: {}
+            };
+            updatedTableData.push(newRow);
+            matchingRow = newRow;
+            console.log('Added new row from saved forecast data:', newRow.customer, '-', newRow.item);
+          }
 
           if (matchingRow && savedItem.forecastData) {
             updatedMonthlyData[matchingRow.id] = savedItem.forecastData;
           }
         });
 
+        setTableData(updatedTableData);
         setMonthlyForecastData(updatedMonthlyData);
 
         // Update table data with forecast totals
@@ -213,9 +240,52 @@ const RollingForecast: React.FC = () => {
             return row;
           })
         );
+
+        console.log('Forecast data persistence loaded - Total items in table:', updatedTableData.length);
       }
     }
-  }, [user]);
+  }, [user, tableData.length]); // Added tableData.length to dependency
+
+  // Auto-save mechanism to persist forecast changes
+  useEffect(() => {
+    if (user && Object.keys(monthlyForecastData).length > 0) {
+      // Auto-save all forecast data
+      const savedForecastData = Object.entries(monthlyForecastData).map(([rowId, monthlyData]) => {
+        const row = tableData.find(r => r.id === rowId);
+        const totalForecast = Object.values(monthlyData).reduce((sum, value) => sum + (value || 0), 0);
+
+        return {
+          id: `auto_forecast_${rowId}_${Date.now()}`,
+          customer: row?.customer || 'Unknown',
+          item: row?.item || 'Unknown',
+          category: 'TYRE SERVICE',
+          brand: 'Various',
+          type: 'rolling_forecast' as const,
+          createdBy: user.name,
+          createdAt: new Date().toISOString(),
+          lastModified: new Date().toISOString(),
+          budgetData: {
+            bud25: row?.bud25 || 0,
+            ytd25: row?.ytd25 || 0,
+            budget2026: 0,
+            rate: 100,
+            stock: row?.stock || 0,
+            git: row?.git || 0,
+            eta: row?.eta,
+            budgetValue2026: 0,
+            discount: 0,
+            monthlyData: []
+          },
+          forecastData: monthlyData,
+          forecastTotal: totalForecast,
+          status: 'saved'
+        };
+      });
+
+      DataPersistenceManager.saveRollingForecastData(savedForecastData);
+      console.log('Auto-saved forecast data for', savedForecastData.length, 'items');
+    }
+  }, [monthlyForecastData, user]); // Auto-save when monthlyForecastData changes
 
   // Load global stock data set by admin
   const loadGlobalStockData = () => {
@@ -397,6 +467,22 @@ const RollingForecast: React.FC = () => {
           DataPersistenceManager.updateRollingForecastStatus(item.id, 'submitted');
         });
 
+        // Log activity for manager visibility
+        ActivityLogger.logRollingForecastActivity(
+          user,
+          `Submitted ${forecastData.length} forecast(s) for approval`,
+          `Multiple items (${forecastData.length} forecasts)`,
+          {
+            changes: [`Submitted ${forecastData.length} forecasts for approval`],
+            metadata: {
+              workflowId: workflowId.slice(-6),
+              forecastCount: forecastData.length,
+              totalForecastUnits: forecastData.reduce((sum, f) => sum + f.forecastUnits, 0)
+            }
+          },
+          'submit'
+        );
+
         console.log('Rolling forecast data preserved for other purposes:', savedForecastData);
         console.log('Submission copies created for approval workflow');
 
@@ -455,12 +541,61 @@ const RollingForecast: React.FC = () => {
       forecast: 0,
       stock: 0,
       git: 0,
-      eta: ''
+      eta: '',
+      budgetDistribution: {}
     };
 
     setTableData(prev => [...prev, newTableRow]);
 
-    console.log('New customer-item combination added:', combination);
+    // Immediately save the new item to persistence to ensure it doesn't disappear
+    if (user) {
+      const savedData = {
+        id: `new_item_${newTableRow.id}_${Date.now()}`,
+        customer: combination.customerName,
+        item: combination.itemName,
+        category: 'TYRE SERVICE',
+        brand: 'Various',
+        type: 'rolling_forecast' as const,
+        createdBy: user.name,
+        createdAt: new Date().toISOString(),
+        lastModified: new Date().toISOString(),
+        budgetData: {
+          bud25: 0,
+          ytd25: 0,
+          budget2026: 0,
+          rate: 100,
+          stock: 0,
+          git: 0,
+          eta: '',
+          budgetValue2026: 0,
+          discount: 0,
+          monthlyData: []
+        },
+        forecastData: {},
+        forecastTotal: 0,
+        status: 'saved'
+      };
+
+      DataPersistenceManager.saveRollingForecastData([savedData]);
+      console.log('New item immediately saved to prevent disappearing:', savedData);
+
+      // Log activity for manager visibility
+      ActivityLogger.logRollingForecastActivity(
+        user,
+        `Added new customer-item combination to rolling forecast`,
+        `${combination.customerName} - ${combination.itemName}`,
+        {
+          changes: ['New customer-item combination created'],
+          metadata: {
+            customerName: combination.customerName,
+            itemName: combination.itemName
+          }
+        },
+        'create'
+      );
+    }
+
+    console.log('New customer-item combination added and persisted:', combination);
     console.log('New table row added:', newTableRow);
   };
 
@@ -531,7 +666,23 @@ const RollingForecast: React.FC = () => {
         };
 
         DataPersistenceManager.saveRollingForecastData([savedData]);
-        console.log('Auto-saved forecast data for manager visibility and preserved for other purposes:', savedData);
+      console.log('Auto-saved forecast data for manager visibility and preserved for other purposes:', savedData);
+
+      // Log activity for manager visibility
+      if (user) {
+        ActivityLogger.logRollingForecastActivity(
+          user,
+          `Updated monthly forecast data`,
+          `${row?.customer} - ${row?.item}`,
+          {
+            changes: [`Monthly forecast values updated for ${month}`],
+            before: { forecastValue: 0 },
+            after: { forecastValue: value },
+            metadata: { month, newTotal: newForecastTotal }
+          },
+          'update'
+        );
+      }
       }
     }
   };
@@ -779,6 +930,26 @@ const RollingForecast: React.FC = () => {
             </label>
             <button className="bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition-colors">
               Customer-Item
+            </button>
+            {/* Manager Activity Dashboard */}
+            {user?.role === 'manager' && (
+              <button
+                onClick={() => setIsManagerActivityDashboardOpen(true)}
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+                title="Monitor salesman activities"
+              >
+                <span>📊</span>
+                <span>Activity Monitor</span>
+              </button>
+            )}
+            {/* Messaging System */}
+            <button
+              onClick={() => setIsMessagingSystemOpen(true)}
+              className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
+              title="Open messaging system"
+            >
+              <span>💬</span>
+              <span>Messages</span>
             </button>
             {/* Follow-backs button for salesman and manager */}
             {(user?.role === 'salesman' || user?.role === 'manager') && (
@@ -1645,6 +1816,20 @@ const RollingForecast: React.FC = () => {
           onClose={() => setIsStockManagementModalOpen(false)}
         />
       )}
+
+      {/* Manager Activity Dashboard Modal */}
+      {user?.role === 'manager' && (
+        <ManagerActivityDashboard
+          isOpen={isManagerActivityDashboardOpen}
+          onClose={() => setIsManagerActivityDashboardOpen(false)}
+        />
+      )}
+
+      {/* Messaging System Modal */}
+      <MessagingSystem
+        isOpen={isMessagingSystemOpen}
+        onClose={() => setIsMessagingSystemOpen(false)}
+      />
     </Layout>
   );
 };
