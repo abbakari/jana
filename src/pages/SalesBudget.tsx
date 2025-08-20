@@ -583,21 +583,26 @@ const SalesBudget: React.FC = () => {
       setOriginalTableData(prev => {
         const updatedData = prev.map(updateItem);
 
-        // Verify data integrity after update
-        const integrityCheck = DataIntegrityMonitor.monitorDataChange(
-          beforeData,
-          updatedData,
-          user,
-          `BUD 2026 update for ${row?.customer} - ${row?.item}`
-        );
+        // Verify data integrity after update with error handling
+        try {
+          const integrityCheck = DataIntegrityMonitor.monitorDataChange(
+            beforeData,
+            updatedData,
+            user,
+            `BUD 2026 update for ${row?.customer} - ${row?.item}`
+          );
 
-        if (integrityCheck.isDataLoss) {
-          console.error('⚠️ DATA LOSS DETECTED:', integrityCheck.report);
-          console.error('Recommendations:', integrityCheck.recommendations);
-          showNotification('Warning: Data integrity check failed. Please verify all data is preserved.', 'error');
-        } else {
-          console.log('✅ Data integrity verified:', integrityCheck.report);
-          DataIntegrityMonitor.createSnapshot(updatedData, user, `BUD 2026 update completed`);
+          if (integrityCheck.isDataLoss) {
+            console.error('⚠️ DATA LOSS DETECTED:', integrityCheck.report);
+            console.error('Recommendations:', integrityCheck.recommendations);
+            showNotification('Warning: Data integrity check failed. Please verify all data is preserved.', 'error');
+          } else {
+            console.log('✅ Data integrity verified:', integrityCheck.report);
+            DataIntegrityMonitor.createSnapshot(updatedData, user, `BUD 2026 update completed`);
+          }
+        } catch (error) {
+          console.error('Error in data integrity monitoring:', error);
+          // Continue without blocking the update
         }
 
         return updatedData;
