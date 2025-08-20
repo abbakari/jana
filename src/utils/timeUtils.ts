@@ -120,7 +120,7 @@ export const getBusinessDaysUntil = (targetDate: Date) => {
   const current = getCurrentDate();
   let count = 0;
   const date = new Date(current);
-  
+
   while (date < targetDate) {
     date.setDate(date.getDate() + 1);
     const dayOfWeek = date.getDay();
@@ -128,6 +128,116 @@ export const getBusinessDaysUntil = (targetDate: Date) => {
       count++;
     }
   }
-  
+
   return count;
+};
+
+// Historical year management functions
+export const getHistoricalYears = (startYear: number = 2021) => {
+  const currentYear = getCurrentYear();
+  const years = [];
+
+  for (let year = startYear; year <= currentYear + 2; year++) {
+    years.push(year);
+  }
+
+  return years;
+};
+
+export const getAvailableYears = () => {
+  return getHistoricalYears().map(year => ({
+    value: year.toString(),
+    label: year.toString(),
+    isCurrent: year === getCurrentYear(),
+    isPast: year < getCurrentYear(),
+    isFuture: year > getCurrentYear()
+  }));
+};
+
+export const getDefaultYearSelections = () => {
+  const currentYear = getCurrentYear();
+  return {
+    pastYear: (currentYear - 1).toString(),
+    currentYear: currentYear.toString(),
+    futureYear: (currentYear + 1).toString()
+  };
+};
+
+export const isHistoricalYear = (year: number) => {
+  return year < getCurrentYear();
+};
+
+export const isFutureYear = (year: number) => {
+  return year > getCurrentYear();
+};
+
+export const getYearStatus = (year: number) => {
+  const currentYear = getCurrentYear();
+  if (year < currentYear) return 'historical';
+  if (year === currentYear) return 'current';
+  return 'future';
+};
+
+export const getYearRange = (startYear?: number, endYear?: number) => {
+  const defaultStart = startYear || 2021;
+  const defaultEnd = endYear || getCurrentYear() + 2;
+
+  return {
+    start: defaultStart,
+    end: defaultEnd,
+    years: getHistoricalYears(defaultStart).filter(year => year <= defaultEnd),
+    total: defaultEnd - defaultStart + 1
+  };
+};
+
+export const formatYearForDisplay = (year: number | string) => {
+  const yearNum = typeof year === 'string' ? parseInt(year) : year;
+  const status = getYearStatus(yearNum);
+  const currentYear = getCurrentYear();
+
+  switch (status) {
+    case 'historical':
+      return `${yearNum} (Historical)`;
+    case 'current':
+      return `${yearNum} (Current)`;
+    case 'future':
+      return `${yearNum} (Forecast)`;
+    default:
+      return yearNum.toString();
+  }
+};
+
+export const getMonthsForYear = (year: number) => {
+  const currentYear = getCurrentYear();
+  const currentMonth = getCurrentMonth();
+
+  return getShortMonthNames().map((month, index) => {
+    let status = 'editable';
+    let hasData = false;
+
+    if (year < currentYear) {
+      status = 'historical';
+      hasData = true; // Assume historical data exists
+    } else if (year === currentYear) {
+      if (index <= currentMonth) {
+        status = 'current';
+        hasData = true;
+      } else {
+        status = 'future';
+        hasData = false;
+      }
+    } else {
+      status = 'forecast';
+      hasData = false;
+    }
+
+    return {
+      month,
+      index,
+      status,
+      hasData,
+      editable: status === 'future' || status === 'forecast',
+      fullName: getMonthNames()[index]
+    };
+  });
 };
