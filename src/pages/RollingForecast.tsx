@@ -1824,6 +1824,12 @@ const RollingForecast: React.FC = () => {
           onClose={() => setIsManagerActivityDashboardOpen(false)}
         />
       )}
+
+      {/* Messaging System Modal */}
+      <MessagingSystem
+        isOpen={isMessagingSystemOpen}
+        onClose={() => setIsMessagingSystemOpen(false)}
+      />
     </Layout>
   );
 };
