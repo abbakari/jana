@@ -1544,7 +1544,7 @@ const RollingForecast: React.FC = () => {
                           onChange={() => handleRowSelect(row.id)}
                         />
                       </td>
-                      <td className="px-2 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                      <td className={`px-2 py-3 whitespace-nowrap text-sm font-medium text-gray-900 ${activeView === 'item-wise' ? 'hidden' : ''}`}>
                         <div className="flex items-center justify-between">
                           <div
                             className={`${
