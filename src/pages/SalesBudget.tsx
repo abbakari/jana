@@ -1526,7 +1526,6 @@ const SalesBudget: React.FC = () => {
                         : 'text-gray-500'
                   }`}>
                     {budgetGrowth > 0 && '📈'}
-                    {budgetGrowth < 0 && '📉'}
                     {budgetGrowth === 0 && '��️'}
                     {budgetGrowth.toFixed(1)}%
                   </p>
