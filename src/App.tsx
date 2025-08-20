@@ -104,6 +104,15 @@ const AppRoutes: React.FC = () => {
 
       {/* Supply Chain Routes */}
       <Route
+        path="/supply-chain-dashboard"
+        element={
+          <RoleBasedRoute allowedRoles={['supply_chain', 'admin']}>
+            <SupplyChainDashboard />
+          </RoleBasedRoute>
+        }
+      />
+
+      <Route
         path="/inventory-management"
         element={
           <RoleBasedRoute allowedRoles={['supply_chain', 'admin']}>
@@ -112,13 +121,13 @@ const AppRoutes: React.FC = () => {
         }
       />
 
-      <Route 
-        path="/distribution-management" 
+      <Route
+        path="/distribution-management"
         element={
           <RoleBasedRoute allowedRoles={['supply_chain', 'admin']}>
             <DistributionManagement />
           </RoleBasedRoute>
-        } 
+        }
       />
 
       {/* Admin Routes */}
