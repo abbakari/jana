@@ -1587,8 +1587,9 @@ const SalesBudget: React.FC = () => {
               {/* Year Selectors */}
               <div className="bg-white p-3 rounded-lg shadow-sm border-2 border-indigo-400">
                 <label className="block text-xs font-medium text-gray-700 mb-1 flex items-center gap-1">
-                  📅 YEARS: (Historical from 2021)
+                  📅 YEARS: (Auto-synced from 2021)
                   {showHistoricalComparison && <span className="text-blue-600">📊</span>}
+                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse ml-1" title="Auto-updating years"></div>
                 </label>
                 <div className="flex gap-1">
                   <select
@@ -1597,12 +1598,13 @@ const SalesBudget: React.FC = () => {
                     onChange={(e) => {
                       console.log('Base year changed:', e.target.value);
                       setSelectedYear2025(e.target.value);
-                      showNotification(`Changed base year to ${formatYearForDisplay(e.target.value)}`, 'success');
+                      showNotification(`Changed base year to ${formatYearForDisplay(e.target.value)} (Current: ${timeState.currentYear})`, 'success');
                     }}
                   >
                     {availableYears.map(year => (
                       <option key={`base_${year.value}`} value={year.value}>
                         {formatYearForDisplay(year.value)}
+                        {year.isCurrent ? ' (Current)' : ''}
                       </option>
                     ))}
                   </select>
@@ -1612,22 +1614,28 @@ const SalesBudget: React.FC = () => {
                     onChange={(e) => {
                       console.log('Target year changed:', e.target.value);
                       setSelectedYear2026(e.target.value);
-                      showNotification(`Changed target year to ${formatYearForDisplay(e.target.value)}`, 'success');
+                      showNotification(`Changed target year to ${formatYearForDisplay(e.target.value)} (Current: ${timeState.currentYear})`, 'success');
                     }}
                   >
                     {availableYears.map(year => (
                       <option key={`target_${year.value}`} value={year.value}>
                         {formatYearForDisplay(year.value)}
+                        {year.isCurrent ? ' (Current)' : ''}
                       </option>
                     ))}
                   </select>
                 </div>
-                <button
-                  onClick={() => setShowHistoricalComparison(!showHistoricalComparison)}
-                  className="mt-1 text-xs text-blue-600 hover:text-blue-800 font-medium"
-                >
-                  {showHistoricalComparison ? '📉 Hide' : '📊 Show'} Historical Comparison
-                </button>
+                <div className="flex items-center justify-between mt-1">
+                  <button
+                    onClick={() => setShowHistoricalComparison(!showHistoricalComparison)}
+                    className="text-xs text-blue-600 hover:text-blue-800 font-medium"
+                  >
+                    {showHistoricalComparison ? '📉 Hide' : '📊 Show'} Historical Comparison
+                  </button>
+                  <div className="text-xs text-gray-500">
+                    Live: {timeState.currentMonthName} {timeState.currentYear}
+                  </div>
+                </div>
               </div>
 
               {/* Action Buttons */}
