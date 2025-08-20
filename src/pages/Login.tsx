@@ -41,128 +41,100 @@ const rotateTyre = keyframes`
   }
 `;
 
-// Enhanced horizontal movement with realistic speed
-const moveHorizontal = keyframes`
+// Continuous horizontal movement animation
+const continuousHorizontalMove = keyframes`
   0% {
-    transform: translateX(-150px) rotate(0deg);
-  }
-  25% {
-    transform: translateX(0px) rotate(90deg);
-  }
-  50% {
-    transform: translateX(150px) rotate(180deg);
-  }
-  75% {
-    transform: translateX(0px) rotate(270deg);
+    transform: translateX(-200px);
   }
   100% {
-    transform: translateX(-150px) rotate(360deg);
+    transform: translateX(calc(100vw + 200px));
   }
 `;
 
-// Realistic tyre bounce effect
-const tyreRoll = keyframes`
-  0%, 100% {
-    transform: translateY(0px) scaleY(1);
+// Continuous rotation animation
+const continuousRotation = keyframes`
+  from {
+    transform: rotate(0deg);
   }
-  50% {
-    transform: translateY(-10px) scaleY(0.95);
-  }
-`;
-
-// Yellow glow pulse effect
-const yellowGlow = keyframes`
-  0%, 100% {
-    box-shadow: 
-      0 0 20px rgba(255, 193, 7, 0.3),
-      0 0 40px rgba(255, 193, 7, 0.2),
-      0 0 60px rgba(255, 193, 7, 0.1);
-  }
-  50% {
-    box-shadow: 
-      0 0 30px rgba(255, 193, 7, 0.5),
-      0 0 50px rgba(255, 193, 7, 0.3),
-      0 0 70px rgba(255, 193, 7, 0.2);
+  to {
+    transform: rotate(360deg);
   }
 `;
 
-// Advanced realistic tyre component
-const RealisticTyre = styled('div')(({ theme }) => ({
+// Container for the moving tyre
+const TyreContainer = styled('div')(() => ({
+  position: 'relative',
+  width: '100%',
+  height: '150px',
+  overflow: 'hidden',
+  display: 'flex',
+  alignItems: 'center',
+  margin: '20px 0'
+}));
+
+// Real tyre component using actual image
+const RealTyre = styled('img')(() => ({
   width: '120px',
   height: '120px',
   borderRadius: '50%',
-  position: 'relative',
-  margin: '20px auto',
-  background: `
-    radial-gradient(circle at 30% 30%, #2a2a2a 8%, transparent 8%),
-    radial-gradient(circle at 70% 30%, #2a2a2a 8%, transparent 8%),
-    radial-gradient(circle at 30% 70%, #2a2a2a 8%, transparent 8%),
-    radial-gradient(circle at 70% 70%, #2a2a2a 8%, transparent 8%),
-    radial-gradient(circle at 15% 50%, #2a2a2a 6%, transparent 6%),
-    radial-gradient(circle at 85% 50%, #2a2a2a 6%, transparent 6%),
-    radial-gradient(circle at 50% 15%, #2a2a2a 6%, transparent 6%),
-    radial-gradient(circle at 50% 85%, #2a2a2a 6%, transparent 6%),
-    conic-gradient(from 0deg, #1a1a1a 0deg, #333 45deg, #1a1a1a 90deg, #333 135deg, #1a1a1a 180deg, #333 225deg, #1a1a1a 270deg, #333 315deg, #1a1a1a 360deg)
-  `,
-  backgroundColor: '#0d0d0d',
-  border: '8px solid #222',
-  boxShadow: `
-    0 0 0 4px #444,
-    0 0 0 8px #333,
-    0 8px 25px rgba(0,0,0,0.6),
-    inset 0 0 0 20px rgba(255,255,255,0.03),
-    inset 0 0 30px rgba(0,0,0,0.5)
-  `,
+  position: 'absolute',
+  top: '50%',
+  left: '0',
+  transform: 'translateY(-50%)',
   animation: `
-    ${rotateTyre} 2s linear infinite, 
-    ${moveHorizontal} 8s ease-in-out infinite, 
-    ${tyreRoll} 4s ease-in-out infinite
+    ${continuousHorizontalMove} 8s linear infinite,
+    ${continuousRotation} 1s linear infinite
   `,
-  
-  // Tyre tread patterns
+  filter: 'drop-shadow(0 8px 16px rgba(0,0,0,0.3))',
+  border: '4px solid #333',
+  boxShadow: `
+    0 0 20px rgba(255, 193, 7, 0.2),
+    inset 0 0 20px rgba(0,0,0,0.3)
+  `,
+  objectFit: 'cover',
+
+  // Add realistic shadow and effects
   '&::before': {
     content: '""',
     position: 'absolute',
-    top: '50%',
+    bottom: '-15px',
     left: '50%',
-    width: '40px',
-    height: '40px',
-    backgroundColor: '#333',
+    transform: 'translateX(-50%)',
+    width: '100px',
+    height: '15px',
+    background: 'radial-gradient(ellipse, rgba(0,0,0,0.3) 0%, transparent 70%)',
     borderRadius: '50%',
-    transform: 'translate(-50%, -50%)',
-    border: '4px solid #555',
-    boxShadow: `
-      inset 0 0 10px rgba(0,0,0,0.8),
-      0 0 15px rgba(255, 193, 7, 0.2)
-    `,
-    background: `
-      radial-gradient(circle at center, #555 30%, #333 70%),
-      conic-gradient(from 0deg, #444 0deg, #666 60deg, #444 120deg, #666 180deg, #444 240deg, #666 300deg, #444 360deg)
-    `
-  },
-  
-  // Center hub with brand logo area
-  '&::after': {
-    content: '"SUPERDOLL"',
-    position: 'absolute',
-    top: '50%',
-    left: '50%',
-    width: '20px',
-    height: '20px',
-    backgroundColor: '#FFD700',
-    borderRadius: '50%',
-    transform: 'translate(-50%, -50%)',
-    boxShadow: `
-      inset 0 0 5px rgba(0,0,0,0.3),
-      0 0 10px rgba(255, 215, 0, 0.5)
-    `,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    fontSize: '6px',
-    fontWeight: 'bold',
-    color: '#000',
-    border: '2px solid #FFA000'
+    animation: `${continuousHorizontalMove} 8s linear infinite`
+  }
+}));
+
+// Track/road effect
+const RoadTrack = styled('div')(() => ({
+  position: 'absolute',
+  bottom: '30px',
+  left: '0',
+  right: '0',
+  height: '8px',
+  background: `
+    repeating-linear-gradient(
+      90deg,
+      rgba(0,0,0,0.1) 0px,
+      rgba(0,0,0,0.1) 15px,
+      transparent 15px,
+      transparent 30px
+    )
+  `,
+  borderRadius: '4px',
+  opacity: 0.6,
+  animation: 'trackMove 2s linear infinite',
+
+  '@keyframes trackMove': {
+    '0%': {
+      backgroundPosition: '0px 0px'
+    },
+    '100%': {
+      backgroundPosition: '30px 0px'
+    }
   }
 }));
 
