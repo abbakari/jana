@@ -39,6 +39,7 @@ import { DiscountCalculator } from '../utils/discountCalculations';
 import AdminDiscountManagement from '../components/AdminDiscountManagement';
 import { ActivityLogger } from '../utils/activityLogger';
 import ManagerActivityDashboard from '../components/ManagerActivityDashboard';
+import MessagingSystem from '../components/MessagingSystem';
 
 interface MonthlyBudget {
   month: string;
