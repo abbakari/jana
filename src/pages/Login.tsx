@@ -639,57 +639,56 @@ const Login: React.FC = () => {
               </Box>
             </AdvancedYellowForm>
 
-            {/* Enhanced Demo Users Section */}
-            <Box sx={{ mt: 4 }}>
-              <Divider sx={{ mb: 3 }}>
-                <Chip 
-                  label="🎯 Quick Demo Access" 
-                  sx={{ 
-                    backgroundColor: 'rgba(255,255,255,0.95)', 
+            {/* Compact Demo Users Section */}
+            <Box sx={{ mt: 2 }}>
+              <Divider sx={{ mb: 2 }}>
+                <Chip
+                  label="🎯 Demo Access"
+                  size="small"
+                  sx={{
+                    backgroundColor: 'rgba(255,255,255,0.95)',
                     fontWeight: 'bold',
                     color: '#E65100',
-                    fontSize: '1rem',
-                    px: 2,
-                    py: 1,
-                    border: '2px solid #FFC107'
-                  }} 
+                    border: '1px solid #FFC107'
+                  }}
                 />
               </Divider>
 
-              <Grid container spacing={2}>
+              <Grid container spacing={1}>
                 {demoUsers.map((user) => (
                   <Grid item xs={6} sm={3} key={user.email}>
                     <EnhancedDemoCard
                       onClick={() => fillDemoCredentials(user.email, user.password)}
                     >
-                      <CardContent sx={{ textAlign: 'center', py: 2, px: 1 }}>
-                        <Box sx={{ color: '#FF8F00', mb: 1 }}>
+                      <CardContent sx={{ textAlign: 'center', py: 1, px: 0.5 }}>
+                        <Box sx={{ color: '#FF8F00', mb: 0.5, '& svg': { fontSize: '1.2rem' } }}>
                           {user.icon}
                         </Box>
-                        <Typography 
-                          variant="subtitle2" 
-                          component="div" 
-                          fontWeight="bold" 
-                          sx={{ fontSize: '0.9rem', color: '#E65100' }}
+                        <Typography
+                          variant="caption"
+                          component="div"
+                          fontWeight="bold"
+                          sx={{ fontSize: '0.75rem', color: '#E65100', lineHeight: 1.2 }}
                         >
                           {user.role}
                         </Typography>
-                        <Typography 
-                          variant="caption" 
-                          color="text.secondary" 
-                          sx={{ fontSize: '0.75rem' }}
+                        <Typography
+                          variant="caption"
+                          color="text.secondary"
+                          sx={{ fontSize: '0.65rem', lineHeight: 1.1 }}
                         >
                           {user.description}
                         </Typography>
                       </CardContent>
-                      <CardActions sx={{ justifyContent: 'center', pt: 0, pb: 2 }}>
+                      <CardActions sx={{ justifyContent: 'center', pt: 0, pb: 1 }}>
                         <Chip
-                          label="👆 Click to Login"
+                          label="Click"
                           color={user.color}
                           size="small"
-                          sx={{ 
-                            fontWeight: 'bold', 
-                            fontSize: '0.75rem',
+                          sx={{
+                            fontWeight: 'bold',
+                            fontSize: '0.65rem',
+                            height: '20px',
                             '&:hover': {
                               transform: 'scale(1.05)'
                             }
@@ -701,40 +700,27 @@ const Login: React.FC = () => {
                 ))}
               </Grid>
 
-              {/* Enhanced Instructions */}
-              <Card sx={{ 
-                mt: 3, 
-                background: 'rgba(255,255,255,0.95)', 
-                borderRadius: 2,
-                border: '2px solid #FFC107'
+              {/* Compact Instructions */}
+              <Card sx={{
+                mt: 2,
+                background: 'rgba(255,255,255,0.95)',
+                borderRadius: 1,
+                border: '1px solid #FFC107'
               }}>
-                <CardContent sx={{ py: 3 }}>
-                  <Typography 
-                    variant="h6" 
-                    component="div" 
-                    fontWeight="bold" 
-                    color="#E65100" 
+                <CardContent sx={{ py: 1.5, px: 2 }}>
+                  <Typography
+                    variant="subtitle2"
+                    component="div"
+                    fontWeight="bold"
+                    color="#E65100"
                     gutterBottom
-                    sx={{ textAlign: 'center' }}
+                    sx={{ textAlign: 'center', fontSize: '0.9rem' }}
                   >
-                    🎯 Demo Access Instructions
+                    📋 Quick Demo Guide
                   </Typography>
-                  <Grid container spacing={2}>
-                    <Grid item xs={12} sm={6}>
-                      <Typography variant="body2" sx={{ lineHeight: 1.6, color: '#424242' }}>
-                        <strong>🔹 Quick Access:</strong> Click any user card above<br />
-                        <strong>🔹 Password:</strong> All accounts use "password"<br />
-                        <strong>🔹 Roles:</strong> Different access levels per user
-                      </Typography>
-                    </Grid>
-                    <Grid item xs={12} sm={6}>
-                      <Typography variant="body2" sx={{ lineHeight: 1.6, color: '#424242' }}>
-                        <strong>🔹 Security:</strong> Role-based permissions<br />
-                        <strong>🔹 Features:</strong> Full system functionality<br />
-                        <strong>🔹 Support:</strong> Real-time dashboard updates
-                      </Typography>
-                    </Grid>
-                  </Grid>
+                  <Typography variant="caption" sx={{ lineHeight: 1.3, color: '#424242', display: 'block', textAlign: 'center' }}>
+                    Click any user card • Password: <strong>"password"</strong> • Different roles have different access levels
+                  </Typography>
                 </CardContent>
               </Card>
             </Box>
