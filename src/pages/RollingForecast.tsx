@@ -649,7 +649,23 @@ const RollingForecast: React.FC = () => {
         };
 
         DataPersistenceManager.saveRollingForecastData([savedData]);
-        console.log('Auto-saved forecast data for manager visibility and preserved for other purposes:', savedData);
+      console.log('Auto-saved forecast data for manager visibility and preserved for other purposes:', savedData);
+
+      // Log activity for manager visibility
+      if (user) {
+        ActivityLogger.logRollingForecastActivity(
+          user,
+          `Updated monthly forecast data`,
+          `${row?.customer} - ${row?.item}`,
+          {
+            changes: [`Monthly forecast values updated for ${month}`],
+            before: { forecastValue: 0 },
+            after: { forecastValue: value },
+            metadata: { month, newTotal: newForecastTotal }
+          },
+          'update'
+        );
+      }
       }
     }
   };
