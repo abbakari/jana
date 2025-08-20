@@ -381,9 +381,9 @@ const Login: React.FC = () => {
       }}
     >
       <Container maxWidth="xl">
-        <Grid container spacing={3} alignItems="center">
-          {/* Left Column - Enhanced Branding and Realistic Tyre */}
-          <Grid item xs={12} md={5}>
+        <Grid container spacing={3} alignItems="stretch">
+          {/* Left Column - ALL Branding Content and Tyre Animation */}
+          <Grid item xs={12} md={6}>
             <Box sx={{ textAlign: 'center', mb: 1 }}>
               {/* Real Tyre with Continuous Horizontal Movement */}
               <TyreContainer>
