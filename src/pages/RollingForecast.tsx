@@ -925,13 +925,36 @@ const RollingForecast: React.FC = () => {
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold text-gray-900">Rolling Forecast for 2025-2026</h1>
           <div className="flex items-center gap-4">
-            <label className="flex items-center gap-2">
-              <input type="checkbox" className="rounded" />
-              <span className="text-sm text-gray-700">Item-wise</span>
-            </label>
-            <button className="bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition-colors">
-              Customer-Item
-            </button>
+            <div className="flex shadow-sm rounded-md overflow-hidden">
+              <button
+                onClick={() => {
+                  console.log('Switching to customer-item view');
+                  setActiveView('customer-item');
+                }}
+                className={`px-6 py-2 font-semibold transition-all duration-200 ${
+                  activeView === 'customer-item'
+                    ? 'bg-orange-500 text-white shadow-md transform scale-105'
+                    : 'bg-white text-gray-600 border border-gray-300 hover:bg-orange-50 hover:text-orange-600'
+                }`}
+                title="View data organized by customer and their items"
+              >
+                Customer - Item
+              </button>
+              <button
+                onClick={() => {
+                  console.log('Switching to item-wise view');
+                  setActiveView('item-wise');
+                }}
+                className={`px-6 py-2 font-semibold transition-all duration-200 ${
+                  activeView === 'item-wise'
+                    ? 'bg-orange-500 text-white shadow-md transform scale-105'
+                    : 'bg-white text-gray-600 border border-gray-300 hover:bg-orange-50 hover:text-orange-600'
+                }`}
+                title="View data organized by items and their customers"
+              >
+                Item Wise
+              </button>
+            </div>
             {/* Manager Activity Dashboard */}
             {user?.role === 'manager' && (
               <button
