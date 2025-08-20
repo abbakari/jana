@@ -2417,6 +2417,14 @@ const SalesBudget: React.FC = () => {
             items={tableData}
           />
         )}
+
+        {/* Admin Discount Management Modal */}
+        {user?.role === 'admin' && (
+          <AdminDiscountManagement
+            isOpen={isAdminDiscountModalOpen}
+            onClose={() => setIsAdminDiscountModalOpen(false)}
+          />
+        )}
       </div>
     </Layout>
   );
