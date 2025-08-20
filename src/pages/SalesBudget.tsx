@@ -34,6 +34,8 @@ import AdminStockManagement from '../components/AdminStockManagement';
 import StockSummaryWidget from '../components/StockSummaryWidget';
 import DataPersistenceManager, { SavedBudgetData } from '../utils/dataPersistence';
 import { initializeSampleGitData } from '../utils/sampleGitData';
+import { DiscountCalculator } from '../utils/discountCalculations';
+import AdminDiscountManagement from '../components/AdminDiscountManagement';
 
 interface MonthlyBudget {
   month: string;
