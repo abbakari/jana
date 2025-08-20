@@ -1,5 +1,12 @@
-// Time utility functions for dynamic time handling
+// Dynamic Time System with real-time updates and observers
+// Automatically updates months, dates, years based on current time across all components
 
+// Time update observers for real-time synchronization
+type TimeUpdateCallback = (currentTime: Date) => void;
+let timeObservers: TimeUpdateCallback[] = [];
+let timeUpdateInterval: NodeJS.Timeout | null = null;
+
+// Core time functions with dynamic updating
 export const getCurrentDate = () => new Date();
 
 export const getCurrentMonth = () => getCurrentDate().getMonth(); // 0-11
