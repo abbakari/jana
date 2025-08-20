@@ -393,24 +393,27 @@ const Login: React.FC = () => {
           {/* Left Column - Enhanced Branding and Realistic Tyre */}
           <Grid item xs={12} md={5}>
             <Box sx={{ textAlign: 'center', mb: 3 }}>
-              {/* Enhanced Realistic Moving Tyre */}
-              <Box sx={{ position: 'relative', mb: 3 }}>
-                <RealisticTyre />
-                
-                {/* Tyre track/shadow effect */}
-                <Box
-                  sx={{
-                    position: 'absolute',
-                    bottom: '-10px',
-                    left: '50%',
-                    transform: 'translateX(-50%)',
-                    width: '200px',
-                    height: '8px',
-                    background: 'repeating-linear-gradient(90deg, rgba(0,0,0,0.1) 0px, rgba(0,0,0,0.1) 10px, transparent 10px, transparent 20px)',
-                    borderRadius: '4px',
-                    opacity: 0.6
-                  }}
+              {/* Real Tyre with Continuous Horizontal Movement */}
+              <TyreContainer>
+                <RealTyre
+                  src="https://images.pexels.com/photos/18435580/pexels-photo-18435580.jpeg"
+                  alt="Real rotating tyre"
                 />
+                <RoadTrack />
+              </TyreContainer>
+
+              {/* Tyre Animation Info */}
+              <Box sx={{ textAlign: 'center', mb: 2 }}>
+                <Typography
+                  variant="caption"
+                  sx={{
+                    color: '#666',
+                    fontSize: '0.85rem',
+                    fontStyle: 'italic'
+                  }}
+                >
+                  🚗 Watch the real tyre roll continuously →
+                </Typography>
               </Box>
               
               {/* Enhanced Company Name */}
