@@ -547,6 +547,22 @@ const SalesBudget: React.FC = () => {
         console.log('Budget data saved for manager visibility and preserved for other purposes:', savedData);
       }
 
+      // Log activity for manager visibility
+      if (user) {
+        ActivityLogger.logSalesBudgetActivity(
+          user,
+          `Updated monthly budget distribution`,
+          `${row?.customer} - ${row?.item}`,
+          {
+            changes: ['Monthly budget values updated', `Total units: ${budgetValue2026}`, `Net value: $${netBudgetValue.toLocaleString()}`],
+            before: { budgetValue2026: row?.budgetValue2026 || 0 },
+            after: { budgetValue2026: netBudgetValue },
+            metadata: { totalUnits: budgetValue2026, totalDiscount, monthlyData: updatedMonthlyData }
+          },
+          'update'
+        );
+      }
+
       showNotification(`Monthly budget data saved for row ${rowId}. Net value: $${netBudgetValue.toLocaleString()} (after $${totalDiscount.toLocaleString()} discount). Data preserved in table and visible to managers.`, 'success');
     }
   };
