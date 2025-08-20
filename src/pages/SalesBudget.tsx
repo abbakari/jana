@@ -1282,29 +1282,45 @@ const SalesBudget: React.FC = () => {
     }
   };
 
-  // Calculate totals based on filtered data and year selection
-  const totalBudget2025 = selectedYear2025 === '2025'
-    ? tableData.reduce((sum, item) => sum + item.budget2025, 0)
-    : tableData.reduce((sum, item) => sum + item.budgetValue2026, 0);
-  const totalActual2025 = selectedYear2025 === '2025'
-    ? tableData.reduce((sum, item) => sum + item.actual2025, 0)
-    : 0; // No actual data for future years
-  const totalBudget2026 = selectedYear2026 === '2026'
-    ? tableData.reduce((sum, item) => sum + item.budgetValue2026, 0)
-    : tableData.reduce((sum, item) => sum + item.budget2025, 0);
+  // Optimize expensive calculations with useMemo to prevent performance issues
+  const calculations = useMemo(() => {
+    console.log('Calculating totals - tableData length:', tableData.length);
 
-  // Calculate units from monthly data for 2026, otherwise use standard calculation
-  const totalUnits2025 = selectedYear2025 === '2025'
-    ? tableData.reduce((sum, item) => sum + Math.floor(item.budget2025 / (item.rate || 1)), 0)
-    : tableData.reduce((sum, item) => sum + item.budget2026, 0);
-  const totalUnits2026 = selectedYear2026 === '2026'
-    ? tableData.reduce((sum, item) => sum + item.budget2026, 0) // budget2026 stores total units from monthly data
-    : tableData.reduce((sum, item) => sum + Math.floor(item.budget2025 / (item.rate || 1)), 0);
-  const totalActualUnits2025 = selectedYear2025 === '2025'
-    ? tableData.reduce((sum, item) => sum + Math.floor(item.actual2025 / (item.rate || 1)), 0)
-    : 0;
+    const totalBudget2025 = selectedYear2025 === '2025'
+      ? tableData.reduce((sum, item) => sum + item.budget2025, 0)
+      : tableData.reduce((sum, item) => sum + item.budgetValue2026, 0);
+    const totalActual2025 = selectedYear2025 === '2025'
+      ? tableData.reduce((sum, item) => sum + item.actual2025, 0)
+      : 0; // No actual data for future years
+    const totalBudget2026 = selectedYear2026 === '2026'
+      ? tableData.reduce((sum, item) => sum + item.budgetValue2026, 0)
+      : tableData.reduce((sum, item) => sum + item.budget2025, 0);
 
-  const budgetGrowth = totalBudget2025 > 0 ? Math.max(0, ((totalBudget2026 - totalBudget2025) / totalBudget2025) * 100) : 0;
+    // Calculate units from monthly data for 2026, otherwise use standard calculation
+    const totalUnits2025 = selectedYear2025 === '2025'
+      ? tableData.reduce((sum, item) => sum + Math.floor(item.budget2025 / (item.rate || 1)), 0)
+      : tableData.reduce((sum, item) => sum + item.budget2026, 0);
+    const totalUnits2026 = selectedYear2026 === '2026'
+      ? tableData.reduce((sum, item) => sum + item.budget2026, 0) // budget2026 stores total units from monthly data
+      : tableData.reduce((sum, item) => sum + Math.floor(item.budget2025 / (item.rate || 1)), 0);
+    const totalActualUnits2025 = selectedYear2025 === '2025'
+      ? tableData.reduce((sum, item) => sum + Math.floor(item.actual2025 / (item.rate || 1)), 0)
+      : 0;
+
+    const budgetGrowth = totalBudget2025 > 0 ? Math.max(0, ((totalBudget2026 - totalBudget2025) / totalBudget2025) * 100) : 0;
+
+    return {
+      totalBudget2025,
+      totalActual2025,
+      totalBudget2026,
+      totalUnits2025,
+      totalUnits2026,
+      totalActualUnits2025,
+      budgetGrowth
+    };
+  }, [tableData, selectedYear2025, selectedYear2026]);
+
+  const { totalBudget2025, totalActual2025, totalBudget2026, totalUnits2025, totalUnits2026, totalActualUnits2025, budgetGrowth } = calculations;
 
   return (
     <Layout>
