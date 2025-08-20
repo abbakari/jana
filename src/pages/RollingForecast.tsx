@@ -990,6 +990,12 @@ const RollingForecast: React.FC = () => {
                   📚 Historical Data
                 </span>
               )}
+              {/* Dynamic time indicator */}
+              <div className="flex items-center gap-1 text-xs text-gray-500">
+                <span>📅</span>
+                <span>{timeState.currentMonthName} {timeState.currentYear}</span>
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" title="Live time sync active"></div>
+              </div>
             </div>
           </div>
           <div className="flex items-center gap-4">
