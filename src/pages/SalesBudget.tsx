@@ -1149,6 +1149,22 @@ const SalesBudget: React.FC = () => {
         DataPersistenceManager.updateSalesBudgetStatus(item.id, 'submitted');
       });
 
+      // Log activity for manager visibility
+      ActivityLogger.logSalesBudgetActivity(
+        user,
+        `Submitted ${allBudgets.length} budget(s) for approval`,
+        `Multiple items (${allBudgets.length} budgets)`,
+        {
+          changes: [`Submitted ${allBudgets.length} budgets for approval`],
+          metadata: {
+            workflowId: workflowId.slice(-6),
+            budgetCount: allBudgets.length,
+            totalValue: tableBudgets.reduce((sum, b) => sum + b.totalBudget, 0)
+          }
+        },
+        'submit'
+      );
+
       showNotification(
         `Successfully submitted ${allBudgets.length} budget(s) for manager approval. ` +
         `Workflow ID: ${workflowId.slice(-6)}. ✅ Original data preserved in table for other purposes.`,
