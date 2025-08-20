@@ -180,26 +180,48 @@ const RollingForecast: React.FC = () => {
     }
   ]);
 
-  // Load saved forecast data for current user
+  // Load saved forecast data for current user and ensure persistence
   useEffect(() => {
-    if (user) {
+    if (user && tableData.length > 0) {
       const savedForecastData = DataPersistenceManager.getRollingForecastDataByUser(user.name);
       if (savedForecastData.length > 0) {
         console.log('Loading saved forecast data for', user.name, ':', savedForecastData.length, 'items');
 
         // Update monthly forecast data from saved data
         const updatedMonthlyData: {[key: string]: {[month: string]: number}} = {};
+        const updatedTableData = [...tableData];
 
         savedForecastData.forEach(savedItem => {
-          const matchingRow = tableData.find(row =>
+          let matchingRow = tableData.find(row =>
             row.customer === savedItem.customer && row.item === savedItem.item
           );
+
+          if (!matchingRow) {
+            // Add new row from saved data if it doesn't exist in table
+            const newRowId = (tableData.length + 1).toString();
+            const newRow = {
+              id: newRowId,
+              customer: savedItem.customer,
+              item: savedItem.item,
+              bud25: savedItem.budgetData?.bud25 || 0,
+              ytd25: savedItem.budgetData?.ytd25 || 0,
+              forecast: savedItem.forecastTotal || 0,
+              stock: savedItem.budgetData?.stock || 0,
+              git: savedItem.budgetData?.git || 0,
+              eta: savedItem.budgetData?.eta || '',
+              budgetDistribution: {}
+            };
+            updatedTableData.push(newRow);
+            matchingRow = newRow;
+            console.log('Added new row from saved forecast data:', newRow.customer, '-', newRow.item);
+          }
 
           if (matchingRow && savedItem.forecastData) {
             updatedMonthlyData[matchingRow.id] = savedItem.forecastData;
           }
         });
 
+        setTableData(updatedTableData);
         setMonthlyForecastData(updatedMonthlyData);
 
         // Update table data with forecast totals
@@ -213,9 +235,52 @@ const RollingForecast: React.FC = () => {
             return row;
           })
         );
+
+        console.log('Forecast data persistence loaded - Total items in table:', updatedTableData.length);
       }
     }
-  }, [user]);
+  }, [user, tableData.length]); // Added tableData.length to dependency
+
+  // Auto-save mechanism to persist forecast changes
+  useEffect(() => {
+    if (user && Object.keys(monthlyForecastData).length > 0) {
+      // Auto-save all forecast data
+      const savedForecastData = Object.entries(monthlyForecastData).map(([rowId, monthlyData]) => {
+        const row = tableData.find(r => r.id === rowId);
+        const totalForecast = Object.values(monthlyData).reduce((sum, value) => sum + (value || 0), 0);
+
+        return {
+          id: `auto_forecast_${rowId}_${Date.now()}`,
+          customer: row?.customer || 'Unknown',
+          item: row?.item || 'Unknown',
+          category: 'TYRE SERVICE',
+          brand: 'Various',
+          type: 'rolling_forecast' as const,
+          createdBy: user.name,
+          createdAt: new Date().toISOString(),
+          lastModified: new Date().toISOString(),
+          budgetData: {
+            bud25: row?.bud25 || 0,
+            ytd25: row?.ytd25 || 0,
+            budget2026: 0,
+            rate: 100,
+            stock: row?.stock || 0,
+            git: row?.git || 0,
+            eta: row?.eta,
+            budgetValue2026: 0,
+            discount: 0,
+            monthlyData: []
+          },
+          forecastData: monthlyData,
+          forecastTotal: totalForecast,
+          status: 'saved'
+        };
+      });
+
+      DataPersistenceManager.saveRollingForecastData(savedForecastData);
+      console.log('Auto-saved forecast data for', savedForecastData.length, 'items');
+    }
+  }, [monthlyForecastData, user]); // Auto-save when monthlyForecastData changes
 
   // Load global stock data set by admin
   const loadGlobalStockData = () => {
