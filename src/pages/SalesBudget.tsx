@@ -819,7 +819,7 @@ const SalesBudget: React.FC = () => {
       showNotification(`Customer "${itemData.customerName}" added successfully`, 'success');
     } else {
       // Add new item to original data
-      const newId = Math.max(...originalTableData.map(item => item.id)) + 1;
+      const newId = Math.max(0, ...originalTableData.map(item => item.id)) + 1;
       const newRow: SalesBudgetItem = {
         id: newId,
         selected: false,
@@ -847,7 +847,36 @@ const SalesBudget: React.FC = () => {
         }))
       };
       setOriginalTableData(prev => [...prev, newRow]);
-      showNotification(`Item "${itemData.itemName}" added successfully`, 'success');
+
+      // Immediately save the new item to persistence to ensure it doesn't disappear
+      if (user) {
+        const savedData = {
+          id: `new_budget_item_${newId}_${Date.now()}`,
+          customer: newRow.customer,
+          item: newRow.item,
+          category: newRow.category,
+          brand: newRow.brand,
+          type: 'sales_budget' as const,
+          createdBy: user.name,
+          createdAt: new Date().toISOString(),
+          lastModified: new Date().toISOString(),
+          budget2025: newRow.budget2025,
+          actual2025: newRow.actual2025,
+          budget2026: newRow.budget2026,
+          rate: newRow.rate,
+          stock: newRow.stock,
+          git: newRow.git,
+          budgetValue2026: newRow.budgetValue2026,
+          discount: newRow.discount,
+          monthlyData: newRow.monthlyData,
+          status: 'saved'
+        };
+
+        DataPersistenceManager.saveSalesBudgetData([savedData]);
+        console.log('New item immediately saved to prevent disappearing:', savedData);
+      }
+
+      showNotification(`Item "${itemData.itemName}" added successfully and saved`, 'success');
     }
   };
 
