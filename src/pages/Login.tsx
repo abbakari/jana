@@ -67,15 +67,17 @@ const yellowGlow = keyframes`
   }
 `;
 
-// Container for the moving tyre - compact version
+// Container for the moving tyre - with proper visibility
 const TyreContainer = styled('div')(() => ({
   position: 'relative',
   width: '100%',
   height: '100px',
-  overflow: 'hidden',
+  overflow: 'visible', // Changed to visible for debugging
   display: 'flex',
   alignItems: 'center',
-  margin: '10px 0'
+  margin: '10px 0',
+  border: '1px solid rgba(255,193,7,0.3)', // Debug border
+  backgroundColor: 'rgba(0,0,0,0.05)' // Debug background
 }));
 
 // Real tyre component using actual image - fixed visibility and movement
