@@ -413,9 +413,9 @@ const SalesBudget: React.FC = () => {
     }
   }, [originalTableData, user]); // Auto-save when originalTableData changes
 
-  // Add event listeners for filter changes
+  // Add event listeners for filter changes with data preservation
   useEffect(() => {
-    // Apply filters whenever any filter changes
+    // Apply filters whenever any filter changes, ensuring all data remains accessible
     const filteredData = originalTableData.filter(item => {
       const matchesCustomer = !selectedCustomer || item.customer.toLowerCase().includes(selectedCustomer.toLowerCase());
       const matchesCategory = !selectedCategory || item.category.toLowerCase().includes(selectedCategory.toLowerCase());
@@ -423,8 +423,30 @@ const SalesBudget: React.FC = () => {
       const matchesItem = !selectedItem || item.item.toLowerCase().includes(selectedItem.toLowerCase());
       return matchesCustomer && matchesCategory && matchesBrand && matchesItem;
     });
-    setTableData(filteredData);
-  }, [selectedCustomer, selectedCategory, selectedBrand, selectedItem, originalTableData]);
+
+    // Preserve any edits in progress by maintaining edited rows even if they don't match filters
+    const editedRowsToPreserve = tableData.filter(item =>
+      item.selected || editingRowId === item.id
+    );
+
+    // Merge filtered data with preserved edits to prevent data loss
+    const preservedIds = new Set(editedRowsToPreserve.map(item => item.id));
+    const finalData = [...filteredData];
+
+    editedRowsToPreserve.forEach(editedRow => {
+      if (!preservedIds.has(editedRow.id) || !finalData.find(item => item.id === editedRow.id)) {
+        finalData.push(editedRow);
+      }
+    });
+
+    setTableData(finalData);
+
+    // Log filter activity for audit purposes
+    if (user && (selectedCustomer || selectedCategory || selectedBrand || selectedItem)) {
+      console.log('Table filtered - Showing', finalData.length, 'of', originalTableData.length, 'items');
+      console.log('Filter preserved', editedRowsToPreserve.length, 'edited/selected items');
+    }
+  }, [selectedCustomer, selectedCategory, selectedBrand, selectedItem, originalTableData, editingRowId]);
 
   const handleSelectRow = (id: number) => {
     console.log('Row selection toggled for ID:', id);
@@ -506,15 +528,20 @@ const SalesBudget: React.FC = () => {
         git: month.git || row?.git || 0
       }));
 
-      setTableData(prev => prev.map(item =>
+      // Update both tableData and originalTableData to ensure persistence
+      const updateItem = (item: SalesBudgetItem) =>
         item.id === rowId ? {
           ...item,
           monthlyData: updatedMonthlyData,
           budget2026: budgetValue2026,
           budgetValue2026: netBudgetValue,
           discount: totalDiscount
-        } : item
-      ));
+        } : item;
+
+      setTableData(prev => prev.map(updateItem));
+      setOriginalTableData(prev => prev.map(updateItem));
+
+      console.log('Updated BUD 2026 data for row', rowId, '- Budget Value:', netBudgetValue, 'Units:', budgetValue2026);
 
       setEditingRowId(null);
       setEditingMonthlyData(prev => {
