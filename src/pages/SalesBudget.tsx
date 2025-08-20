@@ -309,13 +309,21 @@ const SalesBudget: React.FC = () => {
     // Update GIT data on component mount
     updateGitDataInTable();
 
-    // Set up interval to check for GIT data updates and admin stock updates every 30 seconds
+    // Set up interval to check for GIT data updates - with error handling and reduced frequency
     const interval = setInterval(() => {
-      updateGitDataInTable();
-      loadGlobalStockData();
-    }, 30000);
+      try {
+        updateGitDataInTable();
+        loadGlobalStockData();
+      } catch (error) {
+        console.error('Error in periodic update:', error);
+      }
+    }, 60000); // Reduced to 60 seconds to prevent performance issues
 
-    return () => clearInterval(interval);
+    return () => {
+      if (interval) {
+        clearInterval(interval);
+      }
+    };
   }, []);
 
   // Load saved salesman data for current user and ensure persistence
@@ -399,7 +407,7 @@ const SalesBudget: React.FC = () => {
         }
       }
     }
-  }, [user, originalTableData.length]); // Added originalTableData.length to dependency
+  }, [user]); // Removed originalTableData.length to prevent infinite loops
 
   // Enhanced auto-save mechanism to preserve ALL activities and prevent data disappearing
   useEffect(() => {
@@ -441,7 +449,7 @@ const SalesBudget: React.FC = () => {
         }));
       }
     }
-  }, [originalTableData, user]); // Auto-save when originalTableData changes
+  }, []); // Removed dependencies to prevent continuous auto-save loops
 
   // Add event listeners for filter changes with data preservation
   useEffect(() => {
