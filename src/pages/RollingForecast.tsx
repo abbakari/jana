@@ -1312,6 +1312,27 @@ const RollingForecast: React.FC = () => {
               </p>
             </div>
           )}
+
+          {/* Dynamic time status */}
+          <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                <span className="text-sm font-medium text-green-800">
+                  Live Data Sync Active
+                </span>
+                <span className="text-xs text-green-600 bg-green-100 px-2 py-1 rounded-full">
+                  Current: {timeState.currentMonthName} {timeState.currentYear}
+                </span>
+              </div>
+              <div className="text-xs text-green-700">
+                Last updated: {new Date(timeState.lastUpdated).toLocaleTimeString()}
+              </div>
+            </div>
+            <p className="text-xs text-green-700 mt-1">
+              System automatically updates months, dates, and years. Data transitions detected in real-time.
+            </p>
+          </div>
           <div className="grid grid-cols-3 gap-4 text-center mb-6">
             <div className="bg-gray-50 rounded-lg p-4">
               <div className="text-sm text-gray-600 mb-1">Budget 2025</div>
