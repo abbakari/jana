@@ -2519,6 +2519,14 @@ const SalesBudget: React.FC = () => {
             onClose={() => setIsAdminDiscountModalOpen(false)}
           />
         )}
+
+        {/* Manager Activity Dashboard Modal */}
+        {user?.role === 'manager' && (
+          <ManagerActivityDashboard
+            isOpen={isManagerActivityDashboardOpen}
+            onClose={() => setIsManagerActivityDashboardOpen(false)}
+          />
+        )}
       </div>
     </Layout>
   );
