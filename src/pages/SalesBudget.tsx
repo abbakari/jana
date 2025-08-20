@@ -727,12 +727,14 @@ const SalesBudget: React.FC = () => {
       prevData.map(item => {
         if (item.id === itemId) {
           const newMonthlyData = distributeQuantityEqually(value);
-          const newBudgetValue2026 = value * (item.rate || 1);
+          const totalDiscountAmount = newMonthlyData.reduce((sum, month) => sum + month.discount, 0);
+          const newBudgetValue2026 = (value * (item.rate || 1)) - totalDiscountAmount;
 
           return {
             ...item,
             budget2026: value,
             budgetValue2026: newBudgetValue2026,
+            discount: totalDiscountAmount,
             monthlyData: newMonthlyData
           };
         }
