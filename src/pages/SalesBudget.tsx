@@ -1597,6 +1597,17 @@ const SalesBudget: React.FC = () => {
                       </button>
                       <button
                         onClick={() => {
+                          console.log('Activity Monitor button clicked');
+                          setIsManagerActivityDashboardOpen(true);
+                        }}
+                        className="bg-blue-100 text-blue-800 font-semibold px-2 py-1 rounded-md text-xs flex items-center gap-1 hover:bg-blue-200 transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-sm hover:shadow-md"
+                        title="Monitor all salesman activities (Managers only)"
+                      >
+                        <Activity className="w-4 h-4" />
+                        <span>Activity Monitor</span>
+                      </button>
+                      <button
+                        onClick={() => {
                           const selectedBudgets = tableData.filter(row => row.selected && row.budgetValue2026 > 0);
                           if (selectedBudgets.length === 0) {
                             showNotification('Please select budget items with values to send to supply chain', 'error');
