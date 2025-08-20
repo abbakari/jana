@@ -2540,6 +2540,12 @@ const SalesBudget: React.FC = () => {
             onClose={() => setIsManagerActivityDashboardOpen(false)}
           />
         )}
+
+        {/* Messaging System Modal */}
+        <MessagingSystem
+          isOpen={isMessagingSystemOpen}
+          onClose={() => setIsMessagingSystemOpen(false)}
+        />
       </div>
     </Layout>
   );
