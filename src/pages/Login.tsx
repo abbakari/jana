@@ -398,7 +398,7 @@ const Login: React.FC = () => {
               {/* Real Tyre with Continuous Horizontal Movement */}
               <TyreContainer>
                 <RealTyre
-                  src="https://images.pexels.com/photos/18435580/pexels-photo-18435580.jpeg"
+                  src="https://cdn.builder.io/api/v1/image/assets%2F44729c48b8a1436188bb6ac245b84af3%2F1ae80643c7e34f259f80e82971111485?format=webp&width=800"
                   alt="Real rotating tyre"
                 />
                 <RoadTrack />
