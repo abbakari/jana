@@ -17,6 +17,8 @@ import RollingForecastReport from '../components/RollingForecastReport';
 import AddCustomerItemModal from '../components/AddCustomerItemModal';
 import DataPersistenceManager, { SavedForecastData } from '../utils/dataPersistence';
 import { initializeSampleGitData } from '../utils/sampleGitData';
+import { ActivityLogger } from '../utils/activityLogger';
+import ManagerActivityDashboard from '../components/ManagerActivityDashboard';
 import {
   getCurrentMonth,
   getCurrentYear,
