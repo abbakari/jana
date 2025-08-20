@@ -329,10 +329,24 @@ const SalesBudget: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // Load saved salesman data for current user and ensure persistence
+  // Initialize historical data migration on component mount
+  useEffect(() => {
+    DataPersistenceManager.migrateLegacyDataToHistorical();
+  }, []);
+
+  // Load saved salesman data for current user and selected years
   useEffect(() => {
     if (user && originalTableData.length > 0) {
-      const savedBudgetData = DataPersistenceManager.getSalesBudgetDataByUser(user.name);
+      const baseYear = parseInt(selectedYear2025);
+      const targetYear = parseInt(selectedYear2026);
+
+      // Get data for both selected years
+      const baseYearData = DataPersistenceManager.getHistoricalDataByYear(baseYear, 'sales_budget');
+      const targetYearData = DataPersistenceManager.getHistoricalDataByYear(targetYear, 'sales_budget');
+
+      // Combine data from both years and filter by user
+      const allYearData = [...baseYearData, ...targetYearData];
+      const savedBudgetData = allYearData.filter((item: any) => item.createdBy === user.name);
       if (savedBudgetData.length > 0) {
         console.log('Loading saved budget data for', user.name, ':', savedBudgetData.length, 'items');
 
