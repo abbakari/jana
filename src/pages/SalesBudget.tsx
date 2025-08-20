@@ -1768,6 +1768,15 @@ const SalesBudget: React.FC = () => {
               />
             )}
 
+            {/* Comprehensive Data Preservation Status - Shows BUD 2026 protection */}
+            {user && (
+              <DataPreservationStatus
+                tableData={originalTableData}
+                user={user}
+                className="mb-4"
+              />
+            )}
+
             {/* Stats Grid - Real-time Budget Statistics */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-4">{/* Animated when data changes */}
               <div className="bg-white p-2 rounded shadow-sm border border-gray-200 transition-all duration-300 hover:shadow-md">
