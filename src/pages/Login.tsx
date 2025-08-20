@@ -25,10 +25,13 @@ import {
   VisibilityOff,
   Email,
   Lock,
-  Person
+  Person,
+  DirectionsCar,
+  Security,
+  Speed
 } from '@mui/icons-material';
 
-// Keyframe animation for the rotating tyre
+// Enhanced keyframe animation for realistic tyre rotation
 const rotateTyre = keyframes`
   from {
     transform: rotate(0deg);
@@ -38,126 +41,305 @@ const rotateTyre = keyframes`
   }
 `;
 
-// Keyframe animation for horizontal movement
+// Enhanced horizontal movement with realistic speed
 const moveHorizontal = keyframes`
   0% {
-    transform: translateX(-100px);
+    transform: translateX(-150px) rotate(0deg);
+  }
+  25% {
+    transform: translateX(0px) rotate(90deg);
   }
   50% {
-    transform: translateX(100px);
+    transform: translateX(150px) rotate(180deg);
+  }
+  75% {
+    transform: translateX(0px) rotate(270deg);
   }
   100% {
-    transform: translateX(-100px);
+    transform: translateX(-150px) rotate(360deg);
   }
 `;
 
-// Styled component for the moving tyre with enhanced design
-const MovingTyre = styled('div')(({ theme }) => ({
-  width: '80px',
-  height: '80px',
+// Realistic tyre bounce effect
+const tyreRoll = keyframes`
+  0%, 100% {
+    transform: translateY(0px) scaleY(1);
+  }
+  50% {
+    transform: translateY(-10px) scaleY(0.95);
+  }
+`;
+
+// Yellow glow pulse effect
+const yellowGlow = keyframes`
+  0%, 100% {
+    box-shadow: 
+      0 0 20px rgba(255, 193, 7, 0.3),
+      0 0 40px rgba(255, 193, 7, 0.2),
+      0 0 60px rgba(255, 193, 7, 0.1);
+  }
+  50% {
+    box-shadow: 
+      0 0 30px rgba(255, 193, 7, 0.5),
+      0 0 50px rgba(255, 193, 7, 0.3),
+      0 0 70px rgba(255, 193, 7, 0.2);
+  }
+`;
+
+// Advanced realistic tyre component
+const RealisticTyre = styled('div')(({ theme }) => ({
+  width: '120px',
+  height: '120px',
   borderRadius: '50%',
-  background: `
-    radial-gradient(circle at 25% 25%, #444 15%, transparent 15%),
-    radial-gradient(circle at 75% 25%, #444 15%, transparent 15%),
-    radial-gradient(circle at 25% 75%, #444 15%, transparent 15%),
-    radial-gradient(circle at 75% 75%, #444 15%, transparent 15%),
-    radial-gradient(circle at 50% 50%, #666 25%, transparent 25%),
-    conic-gradient(from 0deg, #111 0deg, #333 30deg, #111 60deg, #333 90deg, #111 120deg, #333 150deg, #111 180deg, #333 210deg, #111 240deg, #333 270deg, #111 300deg, #333 330deg, #111 360deg)
-  `,
-  backgroundColor: '#000',
-  border: '6px solid #333',
-  boxShadow: `
-    0 0 0 3px #666,
-    0 4px 12px rgba(0,0,0,0.4),
-    inset 0 0 0 15px rgba(255,255,255,0.05),
-    inset 0 0 20px rgba(0,0,0,0.3)
-  `,
-  animation: `${rotateTyre} 1s linear infinite, ${moveHorizontal} 4s ease-in-out infinite`,
-  margin: '0 auto 20px auto',
   position: 'relative',
+  margin: '20px auto',
+  background: `
+    radial-gradient(circle at 30% 30%, #2a2a2a 8%, transparent 8%),
+    radial-gradient(circle at 70% 30%, #2a2a2a 8%, transparent 8%),
+    radial-gradient(circle at 30% 70%, #2a2a2a 8%, transparent 8%),
+    radial-gradient(circle at 70% 70%, #2a2a2a 8%, transparent 8%),
+    radial-gradient(circle at 15% 50%, #2a2a2a 6%, transparent 6%),
+    radial-gradient(circle at 85% 50%, #2a2a2a 6%, transparent 6%),
+    radial-gradient(circle at 50% 15%, #2a2a2a 6%, transparent 6%),
+    radial-gradient(circle at 50% 85%, #2a2a2a 6%, transparent 6%),
+    conic-gradient(from 0deg, #1a1a1a 0deg, #333 45deg, #1a1a1a 90deg, #333 135deg, #1a1a1a 180deg, #333 225deg, #1a1a1a 270deg, #333 315deg, #1a1a1a 360deg)
+  `,
+  backgroundColor: '#0d0d0d',
+  border: '8px solid #222',
+  boxShadow: `
+    0 0 0 4px #444,
+    0 0 0 8px #333,
+    0 8px 25px rgba(0,0,0,0.6),
+    inset 0 0 0 20px rgba(255,255,255,0.03),
+    inset 0 0 30px rgba(0,0,0,0.5)
+  `,
+  animation: `
+    ${rotateTyre} 2s linear infinite, 
+    ${moveHorizontal} 8s ease-in-out infinite, 
+    ${tyreRoll} 4s ease-in-out infinite
+  `,
+  
+  // Tyre tread patterns
   '&::before': {
     content: '""',
     position: 'absolute',
     top: '50%',
     left: '50%',
-    width: '25px',
-    height: '25px',
+    width: '40px',
+    height: '40px',
     backgroundColor: '#333',
     borderRadius: '50%',
     transform: 'translate(-50%, -50%)',
-    border: '3px solid #666',
-    boxShadow: 'inset 0 0 5px rgba(0,0,0,0.5)'
+    border: '4px solid #555',
+    boxShadow: `
+      inset 0 0 10px rgba(0,0,0,0.8),
+      0 0 15px rgba(255, 193, 7, 0.2)
+    `,
+    background: `
+      radial-gradient(circle at center, #555 30%, #333 70%),
+      conic-gradient(from 0deg, #444 0deg, #666 60deg, #444 120deg, #666 180deg, #444 240deg, #666 300deg, #444 360deg)
+    `
   },
+  
+  // Center hub with brand logo area
   '&::after': {
-    content: '""',
+    content: '"SUPERDOLL"',
     position: 'absolute',
     top: '50%',
     left: '50%',
-    width: '12px',
-    height: '12px',
-    backgroundColor: '#888',
+    width: '20px',
+    height: '20px',
+    backgroundColor: '#FFD700',
     borderRadius: '50%',
     transform: 'translate(-50%, -50%)',
-    boxShadow: 'inset 0 0 3px rgba(0,0,0,0.7)'
+    boxShadow: `
+      inset 0 0 5px rgba(0,0,0,0.3),
+      0 0 10px rgba(255, 215, 0, 0.5)
+    `,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: '6px',
+    fontWeight: 'bold',
+    color: '#000',
+    border: '2px solid #FFA000'
   }
 }));
 
-// Styled component for the yellow form with enhanced styling
-const YellowFormPaper = styled(Paper)(({ theme }) => ({
-  backgroundColor: '#FFF176', // Bright yellow background
-  padding: theme.spacing(3),
-  borderRadius: theme.spacing(2),
-  boxShadow: '0 8px 32px rgba(0,0,0,0.15)',
-  border: '3px solid #F57F17', // Dark yellow border
+// Enhanced yellow form with advanced styling and animations
+const AdvancedYellowForm = styled(Paper)(({ theme }) => ({
+  background: `
+    linear-gradient(135deg, 
+      rgba(255, 235, 59, 0.95) 0%, 
+      rgba(255, 193, 7, 0.95) 30%, 
+      rgba(255, 160, 0, 0.95) 70%, 
+      rgba(255, 193, 7, 0.95) 100%
+    )
+  `,
+  padding: theme.spacing(4),
+  borderRadius: theme.spacing(3),
+  boxShadow: `
+    0 15px 35px rgba(255, 193, 7, 0.3),
+    0 5px 15px rgba(0,0,0,0.1),
+    inset 0 1px 0 rgba(255,255,255,0.4)
+  `,
+  border: '3px solid #F57F17',
   position: 'relative',
+  overflow: 'hidden',
+  animation: `${yellowGlow} 4s ease-in-out infinite`,
+  
+  // Animated background pattern
   '&::before': {
     content: '""',
     position: 'absolute',
-    top: -3,
-    left: -3,
-    right: -3,
-    bottom: -3,
-    background: 'linear-gradient(45deg, #FFD54F, #FFC107, #FF8F00, #FFD54F)',
-    borderRadius: theme.spacing(2),
+    top: -2,
+    left: -2,
+    right: -2,
+    bottom: -2,
+    background: `
+      linear-gradient(45deg, 
+        #FFD54F 0%, 
+        #FFC107 25%, 
+        #FF8F00 50%, 
+        #FFC107 75%, 
+        #FFD54F 100%
+      )
+    `,
+    borderRadius: theme.spacing(3),
     zIndex: -1,
     backgroundSize: '400% 400%',
-    animation: 'gradientShift 3s ease infinite'
+    animation: 'gradientFlow 6s ease infinite'
   },
-  '@keyframes gradientShift': {
-    '0%': {
-      backgroundPosition: '0% 50%'
-    },
-    '50%': {
-      backgroundPosition: '100% 50%'
-    },
-    '100%': {
-      backgroundPosition: '0% 50%'
-    }
+  
+  // Inner glow effect
+  '&::after': {
+    content: '""',
+    position: 'absolute',
+    top: '10px',
+    left: '10px',
+    right: '10px',
+    bottom: '10px',
+    background: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: theme.spacing(2),
+    pointerEvents: 'none'
+  },
+  
+  '@keyframes gradientFlow': {
+    '0%': { backgroundPosition: '0% 50%' },
+    '50%': { backgroundPosition: '100% 50%' },
+    '100%': { backgroundPosition: '0% 50%' }
   }
 }));
 
-// Styled component for the company name
-const CompanyName = styled(Typography)(({ theme }) => ({
-  background: 'linear-gradient(45deg, #1976D2, #42A5F5, #1976D2)',
+// Enhanced company branding with 3D effect
+const CompanyBranding = styled(Typography)(({ theme }) => ({
+  background: `
+    linear-gradient(45deg, 
+      #1976D2 0%, 
+      #42A5F5 30%, 
+      #1976D2 60%, 
+      #0D47A1 100%
+    )
+  `,
   backgroundClip: 'text',
   WebkitBackgroundClip: 'text',
   color: 'transparent',
-  fontWeight: 'bold',
+  fontWeight: 900,
   textAlign: 'center',
-  textShadow: '2px 2px 4px rgba(0,0,0,0.2)',
-  marginBottom: theme.spacing(1),
-  letterSpacing: '3px',
+  fontSize: '3.5rem',
+  letterSpacing: '4px',
+  textShadow: `
+    2px 2px 4px rgba(0,0,0,0.3),
+    0 0 20px rgba(25, 118, 210, 0.3)
+  `,
+  marginBottom: theme.spacing(2),
+  position: 'relative',
   backgroundSize: '200% 200%',
-  animation: 'textGradient 3s ease infinite',
-  '@keyframes textGradient': {
-    '0%': {
-      backgroundPosition: '0% 50%'
-    },
-    '50%': {
-      backgroundPosition: '100% 50%'
-    },
-    '100%': {
-      backgroundPosition: '0% 50%'
+  animation: 'textShimmer 4s ease-in-out infinite',
+  
+  '&::before': {
+    content: '"SUPERDOLL"',
+    position: 'absolute',
+    top: '3px',
+    left: '3px',
+    zIndex: -1,
+    background: 'linear-gradient(45deg, rgba(0,0,0,0.3), rgba(0,0,0,0.1))',
+    backgroundClip: 'text',
+    WebkitBackgroundClip: 'text',
+    color: 'transparent'
+  },
+  
+  '@keyframes textShimmer': {
+    '0%': { backgroundPosition: '0% 50%' },
+    '50%': { backgroundPosition: '100% 50%' },
+    '100%': { backgroundPosition: '0% 50%' }
+  }
+}));
+
+// Enhanced background with tyre track pattern
+const StyledBackground = styled(Box)(() => ({
+  background: `
+    linear-gradient(135deg, 
+      #FFD54F 0%, 
+      #FFC107 25%, 
+      #FF8F00 50%, 
+      #FFC107 75%, 
+      #FFD54F 100%
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 40px,
+      rgba(0,0,0,0.05) 40px,
+      rgba(0,0,0,0.05) 42px
+    )
+  `,
+  backgroundSize: '400% 400%, 60px 60px',
+  animation: 'backgroundShift 8s ease infinite',
+  
+  '@keyframes backgroundShift': {
+    '0%': { backgroundPosition: '0% 50%, 0 0' },
+    '50%': { backgroundPosition: '100% 50%, 30px 0' },
+    '100%': { backgroundPosition: '0% 50%, 60px 0' }
+  }
+}));
+
+// Enhanced demo card with yellow accents
+const EnhancedDemoCard = styled(Card)(({ theme }) => ({
+  background: `
+    linear-gradient(135deg, 
+      rgba(255, 255, 255, 0.98) 0%, 
+      rgba(255, 248, 225, 0.98) 100%
+    )
+  `,
+  borderRadius: theme.spacing(2),
+  border: '2px solid #FFC107',
+  cursor: 'pointer',
+  transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+  position: 'relative',
+  overflow: 'hidden',
+  
+  '&::before': {
+    content: '""',
+    position: 'absolute',
+    top: 0,
+    left: '-100%',
+    width: '100%',
+    height: '100%',
+    background: 'linear-gradient(90deg, transparent, rgba(255, 193, 7, 0.2), transparent)',
+    transition: 'left 0.5s ease'
+  },
+  
+  '&:hover': {
+    transform: 'translateY(-5px) scale(1.02)',
+    boxShadow: `
+      0 10px 25px rgba(255, 193, 7, 0.3),
+      0 5px 15px rgba(0,0,0,0.1)
+    `,
+    borderColor: '#FF8F00',
+    
+    '&::before': {
+      left: '100%'
     }
   }
 }));
@@ -185,11 +367,39 @@ const Login: React.FC = () => {
   };
 
   const demoUsers = [
-    { email: 'admin@example.com', password: 'password', role: 'Administrator', color: 'error' },
-    { email: 'salesman@example.com', password: 'password', role: 'Salesman', color: 'primary' },
-    { email: 'manager@example.com', password: 'password', role: 'Manager', color: 'success' },
-    { email: 'supply@example.com', password: 'password', role: 'Supply Chain', color: 'warning' }
-  ] as const;
+    { 
+      email: 'admin@example.com', 
+      password: 'password', 
+      role: 'Administrator', 
+      color: 'error' as const,
+      icon: <Security />,
+      description: 'Full system access'
+    },
+    { 
+      email: 'salesman@example.com', 
+      password: 'password', 
+      role: 'Salesman', 
+      color: 'primary' as const,
+      icon: <Person />,
+      description: 'Sales & budgets'
+    },
+    { 
+      email: 'manager@example.com', 
+      password: 'password', 
+      role: 'Manager', 
+      color: 'success' as const,
+      icon: <DirectionsCar />,
+      description: 'Team management'
+    },
+    { 
+      email: 'supply@example.com', 
+      password: 'password', 
+      role: 'Supply Chain', 
+      color: 'warning' as const,
+      icon: <Speed />,
+      description: 'Inventory & logistics'
+    }
+  ];
 
   const fillDemoCredentials = (email: string, password: string) => {
     setEmail(email);
@@ -197,57 +407,113 @@ const Login: React.FC = () => {
   };
 
   return (
-    <Box
+    <StyledBackground
       sx={{
         minHeight: '100vh',
-        background: 'linear-gradient(135deg, #FFD54F 0%, #FFC107 50%, #FF8F00 100%)', // Full yellow background
         display: 'flex',
         alignItems: 'center',
-        py: 2,
+        py: 3,
         overflow: 'auto'
       }}
     >
       <Container maxWidth="lg">
-        <Grid container spacing={4} alignItems="center">
-          {/* Left Column - Branding and Tyre */}
+        <Grid container spacing={6} alignItems="center">
+          {/* Left Column - Enhanced Branding and Realistic Tyre */}
           <Grid item xs={12} md={5}>
-            <Box sx={{ textAlign: 'center', mb: 2 }}>
-              {/* Moving Tyre Animation */}
-              <MovingTyre />
+            <Box sx={{ textAlign: 'center', mb: 3 }}>
+              {/* Enhanced Realistic Moving Tyre */}
+              <Box sx={{ position: 'relative', mb: 3 }}>
+                <RealisticTyre />
+                
+                {/* Tyre track/shadow effect */}
+                <Box
+                  sx={{
+                    position: 'absolute',
+                    bottom: '-10px',
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    width: '200px',
+                    height: '8px',
+                    background: 'repeating-linear-gradient(90deg, rgba(0,0,0,0.1) 0px, rgba(0,0,0,0.1) 10px, transparent 10px, transparent 20px)',
+                    borderRadius: '4px',
+                    opacity: 0.6
+                  }}
+                />
+              </Box>
               
-              {/* Company Name */}
-              <CompanyName variant="h3" component="h1">
+              {/* Enhanced Company Name */}
+              <CompanyBranding variant="h3" component="h1">
                 SUPERDOLL
-              </CompanyName>
+              </CompanyBranding>
               
               <Typography 
-                variant="h5" 
+                variant="h4" 
                 component="h2" 
                 sx={{ 
                   color: '#1565C0', 
-                  mb: 1, 
+                  mb: 2, 
                   fontWeight: 'bold',
-                  textShadow: '1px 1px 2px rgba(0,0,0,0.1)'
+                  textShadow: '2px 2px 4px rgba(0,0,0,0.2)',
+                  background: 'linear-gradient(45deg, #1565C0, #42A5F5)',
+                  backgroundClip: 'text',
+                  WebkitBackgroundClip: 'text',
+                  color: 'transparent'
                 }}
               >
                 Welcome Back
               </Typography>
+              
               <Typography 
-                variant="body1" 
+                variant="h6" 
                 sx={{ 
                   color: '#424242',
-                  fontWeight: 'medium'
+                  fontWeight: 'medium',
+                  mb: 2,
+                  textShadow: '1px 1px 2px rgba(255,255,255,0.5)'
                 }}
               >
-                Sign in to access your dashboard
+                🚗 Premium Tyre & Auto Parts Management System
               </Typography>
+              
+              <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, flexWrap: 'wrap' }}>
+                <Chip 
+                  label="🔒 Secure Login" 
+                  sx={{ 
+                    backgroundColor: 'rgba(255,255,255,0.9)',
+                    color: '#1976D2',
+                    fontWeight: 'bold'
+                  }} 
+                />
+                <Chip 
+                  label="⚡ Real-time Dashboard" 
+                  sx={{ 
+                    backgroundColor: 'rgba(255,255,255,0.9)',
+                    color: '#FF8F00',
+                    fontWeight: 'bold'
+                  }} 
+                />
+              </Box>
             </Box>
           </Grid>
 
-          {/* Right Column - Login Form and Demo Users */}
+          {/* Right Column - Enhanced Login Form and Demo Users */}
           <Grid item xs={12} md={7}>
-            {/* Login Form with Yellow Background */}
-            <YellowFormPaper elevation={24}>
+            {/* Enhanced Login Form */}
+            <AdvancedYellowForm elevation={24}>
+              <Typography 
+                variant="h5" 
+                component="h3" 
+                sx={{ 
+                  textAlign: 'center', 
+                  mb: 3, 
+                  fontWeight: 'bold',
+                  color: '#E65100',
+                  textShadow: '1px 1px 2px rgba(255,255,255,0.3)'
+                }}
+              >
+                🔐 Secure Access Portal
+              </Typography>
+              
               <Box component="form" onSubmit={handleSubmit}>
                 <TextField
                   fullWidth
@@ -257,21 +523,36 @@ const Login: React.FC = () => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  size="small"
-                  sx={{ mb: 2 }}
+                  sx={{ mb: 3 }}
                   InputProps={{
                     startAdornment: (
                       <InputAdornment position="start">
-                        <Email color="primary" />
+                        <Email sx={{ color: '#FF8F00' }} />
                       </InputAdornment>
                     ),
                     sx: {
                       backgroundColor: 'rgba(255,255,255,0.95)',
-                      borderRadius: 1
+                      borderRadius: 2,
+                      '& .MuiOutlinedInput-notchedOutline': {
+                        borderColor: '#FFC107',
+                        borderWidth: 2
+                      },
+                      '&:hover .MuiOutlinedInput-notchedOutline': {
+                        borderColor: '#FF8F00'
+                      },
+                      '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                        borderColor: '#E65100'
+                      }
                     }
                   }}
                   InputLabelProps={{
-                    sx: { color: '#E65100', fontWeight: 'bold' }
+                    sx: { 
+                      color: '#E65100', 
+                      fontWeight: 'bold',
+                      '&.Mui-focused': {
+                        color: '#E65100'
+                      }
+                    }
                   }}
                 />
 
@@ -283,12 +564,11 @@ const Login: React.FC = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  size="small"
-                  sx={{ mb: 2 }}
+                  sx={{ mb: 3 }}
                   InputProps={{
                     startAdornment: (
                       <InputAdornment position="start">
-                        <Lock color="primary" />
+                        <Lock sx={{ color: '#FF8F00' }} />
                       </InputAdornment>
                     ),
                     endAdornment: (
@@ -296,8 +576,7 @@ const Login: React.FC = () => {
                         <IconButton
                           onClick={() => setShowPassword(!showPassword)}
                           edge="end"
-                          color="primary"
-                          size="small"
+                          sx={{ color: '#FF8F00' }}
                         >
                           {showPassword ? <VisibilityOff /> : <Visibility />}
                         </IconButton>
@@ -305,16 +584,40 @@ const Login: React.FC = () => {
                     ),
                     sx: {
                       backgroundColor: 'rgba(255,255,255,0.95)',
-                      borderRadius: 1
+                      borderRadius: 2,
+                      '& .MuiOutlinedInput-notchedOutline': {
+                        borderColor: '#FFC107',
+                        borderWidth: 2
+                      },
+                      '&:hover .MuiOutlinedInput-notchedOutline': {
+                        borderColor: '#FF8F00'
+                      },
+                      '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                        borderColor: '#E65100'
+                      }
                     }
                   }}
                   InputLabelProps={{
-                    sx: { color: '#E65100', fontWeight: 'bold' }
+                    sx: { 
+                      color: '#E65100', 
+                      fontWeight: 'bold',
+                      '&.Mui-focused': {
+                        color: '#E65100'
+                      }
+                    }
                   }}
                 />
 
                 {error && (
-                  <Alert severity="error" sx={{ mb: 2, borderRadius: 1 }}>
+                  <Alert 
+                    severity="error" 
+                    sx={{ 
+                      mb: 3, 
+                      borderRadius: 2,
+                      backgroundColor: 'rgba(255,255,255,0.95)',
+                      border: '2px solid #f44336'
+                    }}
+                  >
                     <Typography variant="body2" fontWeight="bold">
                       {error}
                     </Typography>
@@ -328,94 +631,139 @@ const Login: React.FC = () => {
                   size="large"
                   disabled={isLoading || authLoading}
                   sx={{
-                    py: 1.2,
-                    fontSize: '1rem',
+                    py: 2,
+                    fontSize: '1.1rem',
                     fontWeight: 'bold',
-                    borderRadius: 1,
-                    background: 'linear-gradient(45deg, #1976D2, #42A5F5)',
-                    boxShadow: '0 4px 16px rgba(25,118,210,0.3)',
+                    borderRadius: 2,
+                    background: 'linear-gradient(45deg, #1976D2 0%, #42A5F5 50%, #1976D2 100%)',
+                    boxShadow: '0 6px 20px rgba(25,118,210,0.4)',
+                    border: '2px solid #1565C0',
+                    backgroundSize: '200% 200%',
+                    animation: 'buttonShimmer 3s ease infinite',
                     '&:hover': {
-                      background: 'linear-gradient(45deg, #1565C0, #1976D2)',
-                      boxShadow: '0 6px 20px rgba(25,118,210,0.4)'
+                      background: 'linear-gradient(45deg, #1565C0 0%, #1976D2 50%, #1565C0 100%)',
+                      boxShadow: '0 8px 25px rgba(25,118,210,0.5)',
+                      transform: 'translateY(-2px)'
+                    },
+                    '&:disabled': {
+                      background: '#ccc',
+                      boxShadow: 'none'
+                    },
+                    '@keyframes buttonShimmer': {
+                      '0%': { backgroundPosition: '0% 50%' },
+                      '50%': { backgroundPosition: '100% 50%' },
+                      '100%': { backgroundPosition: '0% 50%' }
                     }
                   }}
                 >
-                  {isLoading || authLoading ? 'Signing in...' : 'Sign In'}
+                  {isLoading || authLoading ? '🔄 Signing in...' : '🚀 Sign In Now'}
                 </Button>
               </Box>
-            </YellowFormPaper>
+            </AdvancedYellowForm>
 
-            {/* Demo Users Section */}
-            <Box sx={{ mt: 3 }}>
-              <Divider sx={{ mb: 2 }}>
+            {/* Enhanced Demo Users Section */}
+            <Box sx={{ mt: 4 }}>
+              <Divider sx={{ mb: 3 }}>
                 <Chip 
-                  label="Demo Users" 
+                  label="🎯 Quick Demo Access" 
                   sx={{ 
                     backgroundColor: 'rgba(255,255,255,0.95)', 
                     fontWeight: 'bold',
-                    color: '#1976D2',
-                    fontSize: '0.85rem'
+                    color: '#E65100',
+                    fontSize: '1rem',
+                    px: 2,
+                    py: 1,
+                    border: '2px solid #FFC107'
                   }} 
                 />
               </Divider>
 
-              <Grid container spacing={1.5}>
+              <Grid container spacing={2}>
                 {demoUsers.map((user) => (
-                  <Grid item xs={6} key={user.email}>
-                    <Card
-                      sx={{
-                        backgroundColor: 'rgba(255,255,255,0.95)',
-                        borderRadius: 1.5,
-                        cursor: 'pointer',
-                        transition: 'all 0.3s ease',
-                        '&:hover': {
-                          transform: 'translateY(-2px)',
-                          boxShadow: '0 6px 16px rgba(0,0,0,0.15)'
-                        }
-                      }}
+                  <Grid item xs={6} sm={3} key={user.email}>
+                    <EnhancedDemoCard
                       onClick={() => fillDemoCredentials(user.email, user.password)}
                     >
-                      <CardContent sx={{ textAlign: 'center', py: 1.5, px: 1 }}>
-                        <Person color="primary" sx={{ fontSize: 28, mb: 0.5 }} />
-                        <Typography variant="subtitle2" component="div" fontWeight="bold" sx={{ fontSize: '0.85rem' }}>
+                      <CardContent sx={{ textAlign: 'center', py: 2, px: 1 }}>
+                        <Box sx={{ color: '#FF8F00', mb: 1 }}>
+                          {user.icon}
+                        </Box>
+                        <Typography 
+                          variant="subtitle2" 
+                          component="div" 
+                          fontWeight="bold" 
+                          sx={{ fontSize: '0.9rem', color: '#E65100' }}
+                        >
                           {user.role}
                         </Typography>
-                        <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
-                          {user.email}
+                        <Typography 
+                          variant="caption" 
+                          color="text.secondary" 
+                          sx={{ fontSize: '0.75rem' }}
+                        >
+                          {user.description}
                         </Typography>
                       </CardContent>
-                      <CardActions sx={{ justifyContent: 'center', pt: 0, pb: 1 }}>
+                      <CardActions sx={{ justifyContent: 'center', pt: 0, pb: 2 }}>
                         <Chip
-                          label="Click to Login"
+                          label="👆 Click to Login"
                           color={user.color}
                           size="small"
-                          sx={{ fontWeight: 'bold', fontSize: '0.7rem' }}
+                          sx={{ 
+                            fontWeight: 'bold', 
+                            fontSize: '0.75rem',
+                            '&:hover': {
+                              transform: 'scale(1.05)'
+                            }
+                          }}
                         />
                       </CardActions>
-                    </Card>
+                    </EnhancedDemoCard>
                   </Grid>
                 ))}
               </Grid>
 
-              {/* Instructions */}
-              <Card sx={{ mt: 2, backgroundColor: 'rgba(255,255,255,0.95)', borderRadius: 1.5 }}>
-                <CardContent sx={{ py: 2 }}>
-                  <Typography variant="subtitle2" component="div" fontWeight="bold" color="primary" gutterBottom>
-                    📋 Demo Instructions
+              {/* Enhanced Instructions */}
+              <Card sx={{ 
+                mt: 3, 
+                background: 'rgba(255,255,255,0.95)', 
+                borderRadius: 2,
+                border: '2px solid #FFC107'
+              }}>
+                <CardContent sx={{ py: 3 }}>
+                  <Typography 
+                    variant="h6" 
+                    component="div" 
+                    fontWeight="bold" 
+                    color="#E65100" 
+                    gutterBottom
+                    sx={{ textAlign: 'center' }}
+                  >
+                    🎯 Demo Access Instructions
                   </Typography>
-                  <Typography variant="caption" component="div" sx={{ lineHeight: 1.4 }}>
-                    • Click any demo user card to auto-fill credentials<br />
-                    • All users use password: <strong>password</strong><br />
-                    • Each role has different access levels and features<br />
-                    • 🔒 Secure authentication with role-based permissions
-                  </Typography>
+                  <Grid container spacing={2}>
+                    <Grid item xs={12} sm={6}>
+                      <Typography variant="body2" sx={{ lineHeight: 1.6, color: '#424242' }}>
+                        <strong>🔹 Quick Access:</strong> Click any user card above<br />
+                        <strong>🔹 Password:</strong> All accounts use "password"<br />
+                        <strong>🔹 Roles:</strong> Different access levels per user
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <Typography variant="body2" sx={{ lineHeight: 1.6, color: '#424242' }}>
+                        <strong>🔹 Security:</strong> Role-based permissions<br />
+                        <strong>🔹 Features:</strong> Full system functionality<br />
+                        <strong>🔹 Support:</strong> Real-time dashboard updates
+                      </Typography>
+                    </Grid>
+                  </Grid>
                 </CardContent>
               </Card>
             </Box>
           </Grid>
         </Grid>
       </Container>
-    </Box>
+    </StyledBackground>
   );
 };
 
