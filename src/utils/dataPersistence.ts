@@ -11,6 +11,7 @@ export interface SavedForecastData {
   createdBy: string;
   createdAt: string;
   lastModified: string;
+  year?: number; // For historical data tracking
   budgetData?: {
     bud25: number;
     ytd25: number;
@@ -49,6 +50,7 @@ export interface SavedBudgetData {
   id: string;
   customer: string;
   item: string;
+  year?: number; // For historical data tracking
   category: string;
   brand: string;
   type: 'sales_budget';
@@ -468,6 +470,328 @@ export class DataPersistenceManager {
     if (statuses.every(status => status === 'arrived')) return 'arrived';
 
     return 'mixed';
+  }
+
+  // Historical data management functions
+  static getHistoricalDataByYear(year: number, type: 'sales_budget' | 'rolling_forecast') {
+    try {
+      const key = type === 'sales_budget' ? 'saved_sales_budget_data' : 'saved_rolling_forecast_data';
+      const data = JSON.parse(localStorage.getItem(key) || '[]');
+
+      return data.filter((item: SavedBudgetData | SavedForecastData) => {
+        // If year is specified in item, use it; otherwise, parse from createdAt
+        const itemYear = item.year || new Date(item.createdAt).getFullYear();
+        return itemYear === year;
+      });
+    } catch (error) {
+      console.error('Error getting historical data by year:', error);
+      return [];
+    }
+  }
+
+  static saveHistoricalData(data: (SavedBudgetData | SavedForecastData)[], year: number, type: 'sales_budget' | 'rolling_forecast') {
+    try {
+      const dataWithYear = data.map(item => ({ ...item, year }));
+
+      if (type === 'sales_budget') {
+        this.saveSalesBudgetData(dataWithYear as SavedBudgetData[]);
+      } else {
+        this.saveRollingForecastData(dataWithYear as SavedForecastData[]);
+      }
+
+      console.log(`Saved ${data.length} historical ${type} items for year ${year}`);
+    } catch (error) {
+      console.error('Error saving historical data:', error);
+    }
+  }
+
+  static getAvailableHistoricalYears(type: 'sales_budget' | 'rolling_forecast') {
+    try {
+      const key = type === 'sales_budget' ? 'saved_sales_budget_data' : 'saved_rolling_forecast_data';
+      const data = JSON.parse(localStorage.getItem(key) || '[]');
+
+      const years = new Set<number>();
+      data.forEach((item: SavedBudgetData | SavedForecastData) => {
+        const itemYear = item.year || new Date(item.createdAt).getFullYear();
+        years.add(itemYear);
+      });
+
+      return Array.from(years).sort((a, b) => b - a); // Newest first
+    } catch (error) {
+      console.error('Error getting available historical years:', error);
+      return [];
+    }
+  }
+
+  static migrateLegacyDataToHistorical() {
+    try {
+      // Migrate sales budget data
+      const salesBudgetData = this.getSalesBudgetData();
+      const updatedSalesBudgetData = salesBudgetData.map((item: SavedBudgetData) => {
+        if (!item.year) {
+          return { ...item, year: new Date(item.createdAt).getFullYear() };
+        }
+        return item;
+      });
+      localStorage.setItem('saved_sales_budget_data', JSON.stringify(updatedSalesBudgetData));
+
+      // Migrate rolling forecast data
+      const forecastData = this.getRollingForecastData();
+      const updatedForecastData = forecastData.map((item: SavedForecastData) => {
+        if (!item.year) {
+          return { ...item, year: new Date(item.createdAt).getFullYear() };
+        }
+        return item;
+      });
+      localStorage.setItem('saved_rolling_forecast_data', JSON.stringify(updatedForecastData));
+
+      console.log('Migrated legacy data to include year information');
+    } catch (error) {
+      console.error('Error migrating legacy data:', error);
+    }
+  }
+
+  // Time-based data migration and cleanup system
+  static performAutomaticDataMaintenance() {
+    try {
+      console.log('Starting automatic data maintenance...');
+
+      // 1. Migrate legacy data
+      this.migrateLegacyDataToHistorical();
+
+      // 2. Archive old data by year
+      this.archiveOldDataByYear();
+
+      // 3. Clean up orphaned records
+      this.cleanupOrphanedRecords();
+
+      // 4. Optimize storage
+      this.optimizeDataStorage();
+
+      // 5. Update data versioning
+      this.updateDataVersioning();
+
+      console.log('Automatic data maintenance completed successfully');
+    } catch (error) {
+      console.error('Error during automatic data maintenance:', error);
+    }
+  }
+
+  static archiveOldDataByYear() {
+    try {
+      const currentYear = new Date().getFullYear();
+      const archiveThreshold = currentYear - 3; // Archive data older than 3 years
+
+      // Archive sales budget data
+      const salesBudgetData = this.getSalesBudgetData();
+      const activeSalesBudgetData = salesBudgetData.filter((item: SavedBudgetData) => {
+        const itemYear = item.year || new Date(item.createdAt).getFullYear();
+        return itemYear >= archiveThreshold;
+      });
+      const archivedSalesBudgetData = salesBudgetData.filter((item: SavedBudgetData) => {
+        const itemYear = item.year || new Date(item.createdAt).getFullYear();
+        return itemYear < archiveThreshold;
+      });
+
+      // Archive rolling forecast data
+      const forecastData = this.getRollingForecastData();
+      const activeForecastData = forecastData.filter((item: SavedForecastData) => {
+        const itemYear = item.year || new Date(item.createdAt).getFullYear();
+        return itemYear >= archiveThreshold;
+      });
+      const archivedForecastData = forecastData.filter((item: SavedForecastData) => {
+        const itemYear = item.year || new Date(item.createdAt).getFullYear();
+        return itemYear < archiveThreshold;
+      });
+
+      // Update active data
+      localStorage.setItem('saved_sales_budget_data', JSON.stringify(activeSalesBudgetData));
+      localStorage.setItem('saved_rolling_forecast_data', JSON.stringify(activeForecastData));
+
+      // Store archived data separately
+      if (archivedSalesBudgetData.length > 0) {
+        localStorage.setItem('archived_sales_budget_data', JSON.stringify(archivedSalesBudgetData));
+      }
+      if (archivedForecastData.length > 0) {
+        localStorage.setItem('archived_rolling_forecast_data', JSON.stringify(archivedForecastData));
+      }
+
+      console.log(`Archived ${archivedSalesBudgetData.length} sales budget items and ${archivedForecastData.length} forecast items older than ${archiveThreshold}`);
+    } catch (error) {
+      console.error('Error archiving old data:', error);
+    }
+  }
+
+  static cleanupOrphanedRecords() {
+    try {
+      const currentTime = new Date().getTime();
+      const maxAge = 30 * 24 * 60 * 60 * 1000; // 30 days in milliseconds
+
+      // Clean up draft records older than 30 days
+      const salesBudgetData = this.getSalesBudgetData();
+      const validSalesBudgetData = salesBudgetData.filter((item: SavedBudgetData) => {
+        const itemAge = currentTime - new Date(item.createdAt).getTime();
+        return item.status !== 'draft' || itemAge <= maxAge;
+      });
+
+      const forecastData = this.getRollingForecastData();
+      const validForecastData = forecastData.filter((item: SavedForecastData) => {
+        const itemAge = currentTime - new Date(item.createdAt).getTime();
+        return item.status !== 'draft' || itemAge <= maxAge;
+      });
+
+      localStorage.setItem('saved_sales_budget_data', JSON.stringify(validSalesBudgetData));
+      localStorage.setItem('saved_rolling_forecast_data', JSON.stringify(validForecastData));
+
+      const removedSalesItems = salesBudgetData.length - validSalesBudgetData.length;
+      const removedForecastItems = forecastData.length - validForecastData.length;
+
+      console.log(`Cleaned up ${removedSalesItems} orphaned sales budget records and ${removedForecastItems} orphaned forecast records`);
+    } catch (error) {
+      console.error('Error cleaning up orphaned records:', error);
+    }
+  }
+
+  static optimizeDataStorage() {
+    try {
+      // Compress similar records
+      this.compressSimilarRecords();
+
+      // Remove duplicate entries
+      this.removeDuplicateEntries();
+
+      // Optimize storage keys
+      this.optimizeStorageKeys();
+
+      console.log('Data storage optimization completed');
+    } catch (error) {
+      console.error('Error optimizing data storage:', error);
+    }
+  }
+
+  static compressSimilarRecords() {
+    try {
+      // Group similar records by customer-item combination
+      const salesBudgetData = this.getSalesBudgetData();
+      const groupedSalesData = new Map();
+
+      salesBudgetData.forEach((item: SavedBudgetData) => {
+        const key = `${item.customer}_${item.item}_${item.year}`;
+        if (!groupedSalesData.has(key)) {
+          groupedSalesData.set(key, []);
+        }
+        groupedSalesData.get(key).push(item);
+      });
+
+      // Keep only the latest record for each group
+      const optimizedSalesData: SavedBudgetData[] = [];
+      groupedSalesData.forEach((records) => {
+        const latestRecord = records.sort((a: SavedBudgetData, b: SavedBudgetData) =>
+          new Date(b.lastModified).getTime() - new Date(a.lastModified).getTime()
+        )[0];
+        optimizedSalesData.push(latestRecord);
+      });
+
+      localStorage.setItem('saved_sales_budget_data', JSON.stringify(optimizedSalesData));
+
+      console.log(`Compressed ${salesBudgetData.length} sales records to ${optimizedSalesData.length} optimized records`);
+    } catch (error) {
+      console.error('Error compressing similar records:', error);
+    }
+  }
+
+  static removeDuplicateEntries() {
+    try {
+      // Remove exact duplicates from sales budget data
+      const salesBudgetData = this.getSalesBudgetData();
+      const uniqueSalesData = salesBudgetData.filter((item: SavedBudgetData, index: number, array: SavedBudgetData[]) => {
+        return array.findIndex((t: SavedBudgetData) => t.id === item.id) === index;
+      });
+
+      // Remove exact duplicates from forecast data
+      const forecastData = this.getRollingForecastData();
+      const uniqueForecastData = forecastData.filter((item: SavedForecastData, index: number, array: SavedForecastData[]) => {
+        return array.findIndex((t: SavedForecastData) => t.id === item.id) === index;
+      });
+
+      localStorage.setItem('saved_sales_budget_data', JSON.stringify(uniqueSalesData));
+      localStorage.setItem('saved_rolling_forecast_data', JSON.stringify(uniqueForecastData));
+
+      const removedSales = salesBudgetData.length - uniqueSalesData.length;
+      const removedForecast = forecastData.length - uniqueForecastData.length;
+
+      console.log(`Removed ${removedSales} duplicate sales records and ${removedForecast} duplicate forecast records`);
+    } catch (error) {
+      console.error('Error removing duplicate entries:', error);
+    }
+  }
+
+  static optimizeStorageKeys() {
+    try {
+      // Ensure consistent storage key naming
+      const storageKeys = [
+        'saved_sales_budget_data',
+        'saved_rolling_forecast_data',
+        'git_data',
+        'admin_global_stock_data'
+      ];
+
+      storageKeys.forEach(key => {
+        const data = localStorage.getItem(key);
+        if (data) {
+          try {
+            const parsedData = JSON.parse(data);
+            // Re-save to ensure consistent formatting
+            localStorage.setItem(key, JSON.stringify(parsedData));
+          } catch (error) {
+            console.warn(`Invalid JSON data in ${key}, removing...`);
+            localStorage.removeItem(key);
+          }
+        }
+      });
+
+      console.log('Storage keys optimized');
+    } catch (error) {
+      console.error('Error optimizing storage keys:', error);
+    }
+  }
+
+  static updateDataVersioning() {
+    try {
+      const currentVersion = '2.0.0'; // Updated for dynamic time system
+      const versionInfo = {
+        version: currentVersion,
+        lastUpdated: new Date().toISOString(),
+        features: [
+          'Dynamic time system',
+          'Historical data support',
+          'Auto-archiving',
+          'Real-time sync',
+          'Time-based transitions'
+        ]
+      };
+
+      localStorage.setItem('data_version_info', JSON.stringify(versionInfo));
+      console.log(`Data version updated to ${currentVersion}`);
+    } catch (error) {
+      console.error('Error updating data versioning:', error);
+    }
+  }
+
+  // Schedule automatic maintenance
+  static scheduleAutomaticMaintenance() {
+    // Run maintenance once per day
+    const lastMaintenanceKey = 'last_data_maintenance';
+    const lastMaintenance = localStorage.getItem(lastMaintenanceKey);
+    const now = new Date();
+    const today = now.toDateString();
+
+    if (lastMaintenance !== today) {
+      setTimeout(() => {
+        this.performAutomaticDataMaintenance();
+        localStorage.setItem(lastMaintenanceKey, today);
+      }, 5000); // Delay 5 seconds after app start
+    }
   }
 }
 

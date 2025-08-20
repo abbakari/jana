@@ -41,6 +41,15 @@ import AdminDiscountManagement from '../components/AdminDiscountManagement';
 import { ActivityLogger } from '../utils/activityLogger';
 import ManagerActivityDashboard from '../components/ManagerActivityDashboard';
 import MessagingSystem from '../components/MessagingSystem';
+import {
+  getAvailableYears,
+  getDefaultYearSelections,
+  getMonthsForYear,
+  isHistoricalYear,
+  formatYearForDisplay,
+  getCurrentYear
+} from '../utils/timeUtils';
+import { useFullTimeSync } from '../hooks/useTimeSync';
 
 interface MonthlyBudget {
   month: string;
@@ -82,6 +91,44 @@ const SalesBudget: React.FC = () => {
   const [selectedYear2025, setSelectedYear2025] = useState('2025');
   const [selectedYear2026, setSelectedYear2026] = useState('2026');
   const [activeView, setActiveView] = useState('customer-item');
+
+  // Historical year support
+  const [availableYears, setAvailableYears] = useState(getAvailableYears());
+  const [viewingYear, setViewingYear] = useState(getCurrentYear().toString());
+  const [showHistoricalComparison, setShowHistoricalComparison] = useState(false);
+
+  // Dynamic time synchronization
+  const { timeState, forceRefresh, currentYear, currentMonth } = useFullTimeSync(
+    // On month change
+    () => {
+      console.log('Month changed in Sales Budget - refreshing monthly data');
+      // Refresh monthly budget data and recalculate totals
+      setEditingMonthlyData({}); // Clear any active edits
+      // Update available years in case we crossed into a new year
+      setAvailableYears(getAvailableYears());
+      // Force re-calculation of monthly data
+      setOriginalTableData(prev => [...prev]);
+    },
+    // On year change
+    () => {
+      console.log('Year changed in Sales Budget - major data refresh');
+      // Update year selections to current year for new year transition
+      const newCurrentYear = getCurrentYear().toString();
+      setSelectedYear2025(newCurrentYear);
+      setSelectedYear2026((getCurrentYear() + 1).toString());
+      setAvailableYears(getAvailableYears());
+      // Clear any temporary states
+      setEditingRowId(null);
+      setEditingMonthlyData({});
+      // Show notification about year transition
+      showNotification(`🎊 Happy New Year! Updated to ${newCurrentYear}`, 'success');
+    },
+    // On any time update
+    (newTimeState) => {
+      // Update page title to reflect current time context
+      document.title = `Sales Budget ${newTimeState.currentYear} - STM Budget`;
+    }
+  );
   const [editingRowId, setEditingRowId] = useState<number | null>(null);
   const [isSubmittingForApproval, setIsSubmittingForApproval] = useState(false);
 
@@ -316,10 +363,24 @@ const SalesBudget: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // Load saved salesman data for current user and ensure persistence
+  // Initialize historical data migration on component mount
+  useEffect(() => {
+    DataPersistenceManager.migrateLegacyDataToHistorical();
+  }, []);
+
+  // Load saved salesman data for current user and selected years
   useEffect(() => {
     if (user && originalTableData.length > 0) {
-      const savedBudgetData = DataPersistenceManager.getSalesBudgetDataByUser(user.name);
+      const baseYear = parseInt(selectedYear2025);
+      const targetYear = parseInt(selectedYear2026);
+
+      // Get data for both selected years
+      const baseYearData = DataPersistenceManager.getHistoricalDataByYear(baseYear, 'sales_budget');
+      const targetYearData = DataPersistenceManager.getHistoricalDataByYear(targetYear, 'sales_budget');
+
+      // Combine data from both years and filter by user
+      const allYearData = [...baseYearData, ...targetYearData];
+      const savedBudgetData = allYearData.filter((item: any) => item.createdBy === user.name);
       if (savedBudgetData.length > 0) {
         console.log('Loading saved budget data for', user.name, ':', savedBudgetData.length, 'items');
 
@@ -376,7 +437,7 @@ const SalesBudget: React.FC = () => {
         console.log('Data persistence loaded - Total items in table:', mergedData.length);
       }
     }
-  }, [user, originalTableData.length]); // Added originalTableData.length to dependency
+  }, [user, originalTableData.length, selectedYear2025, selectedYear2026]); // Added year selections to reload data when years change
 
   // Auto-save mechanism to persist data changes
   useEffect(() => {
@@ -1317,6 +1378,31 @@ const SalesBudget: React.FC = () => {
               <StockSummaryWidget compact={false} />
             </div>
 
+            {/* Dynamic Time Status Alert */}
+            <div className="mb-4 p-3 bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-lg">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                    <span className="text-sm font-medium text-green-800">Live Time Sync</span>
+                  </div>
+                  <div className="text-sm text-gray-700">
+                    Current: <span className="font-medium">{timeState.currentMonthName} {timeState.currentYear}</span>
+                  </div>
+                  <div className="text-xs text-gray-500">
+                    Updated: {new Date(timeState.lastUpdated).toLocaleTimeString()}
+                  </div>
+                </div>
+                <button
+                  onClick={forceRefresh}
+                  className="text-xs bg-blue-100 text-blue-800 px-3 py-1 rounded hover:bg-blue-200 transition-colors"
+                  title="Force refresh all time-based data"
+                >
+                  🔄 Refresh
+                </button>
+              </div>
+            </div>
+
             {/* Info Alert and View Toggle */}
             <div className="flex justify-between items-center mb-4">
               {user?.role === 'salesman' ? (
@@ -1501,35 +1587,54 @@ const SalesBudget: React.FC = () => {
               {/* Year Selectors */}
               <div className="bg-white p-3 rounded-lg shadow-sm border-2 border-indigo-400">
                 <label className="block text-xs font-medium text-gray-700 mb-1 flex items-center gap-1">
-                  📅 YEARS:
+                  📅 YEARS: (Auto-synced from 2021)
+                  {showHistoricalComparison && <span className="text-blue-600">📊</span>}
+                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse ml-1" title="Auto-updating years"></div>
                 </label>
                 <div className="flex gap-1">
                   <select
                     className="w-full text-xs p-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors"
                     value={selectedYear2025}
                     onChange={(e) => {
-                      console.log('Year 2025 changed:', e.target.value);
+                      console.log('Base year changed:', e.target.value);
                       setSelectedYear2025(e.target.value);
-                      showNotification(`Changed base year to ${e.target.value}`, 'success');
+                      showNotification(`Changed base year to ${formatYearForDisplay(e.target.value)} (Current: ${timeState.currentYear})`, 'success');
                     }}
                   >
-                    <option value="2024">2024</option>
-                    <option value="2025">2025</option>
+                    {availableYears.map(year => (
+                      <option key={`base_${year.value}`} value={year.value}>
+                        {formatYearForDisplay(year.value)}
+                        {year.isCurrent ? ' (Current)' : ''}
+                      </option>
+                    ))}
                   </select>
                   <select
                     className="w-full text-xs p-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors"
                     value={selectedYear2026}
                     onChange={(e) => {
-                      console.log('Year 2026 changed:', e.target.value);
+                      console.log('Target year changed:', e.target.value);
                       setSelectedYear2026(e.target.value);
-                      showNotification(`Changed target year to ${e.target.value}`, 'success');
+                      showNotification(`Changed target year to ${formatYearForDisplay(e.target.value)} (Current: ${timeState.currentYear})`, 'success');
                     }}
                   >
-                    {/*but with the integration with backend they must change automatically according to the time*/}
-                    {<option value="2024">2024</option>}
-                    <option value="2025">2025</option>
-                    <option value="2026">2026</option>
+                    {availableYears.map(year => (
+                      <option key={`target_${year.value}`} value={year.value}>
+                        {formatYearForDisplay(year.value)}
+                        {year.isCurrent ? ' (Current)' : ''}
+                      </option>
+                    ))}
                   </select>
+                </div>
+                <div className="flex items-center justify-between mt-1">
+                  <button
+                    onClick={() => setShowHistoricalComparison(!showHistoricalComparison)}
+                    className="text-xs text-blue-600 hover:text-blue-800 font-medium"
+                  >
+                    {showHistoricalComparison ? '📉 Hide' : '📊 Show'} Historical Comparison
+                  </button>
+                  <div className="text-xs text-gray-500">
+                    Live: {timeState.currentMonthName} {timeState.currentYear}
+                  </div>
                 </div>
               </div>
 
@@ -1812,11 +1917,8 @@ const SalesBudget: React.FC = () => {
                           </>
                         ) : (
                           <>
-                            <th className="p-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-r border-gray-200" style={{width: '200px'}}>
+                            <th className="p-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-r border-gray-200" style={{width: '350px'}}>
                               Item (Category - Brand)
-                            </th>
-                            <th className="p-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-r border-gray-200" style={{width: '150px'}}>
-                              Customer
                             </th>
                           </>
                         )}
@@ -1919,37 +2021,6 @@ const SalesBudget: React.FC = () => {
                                     <div className="text-xs text-gray-500 truncate">
                                       {row.category} - {row.brand}
                                     </div>
-                                  </div>
-                                </td>
-                                <td className="p-2 border-b border-r border-gray-200 text-xs">
-                                  <div className="flex items-center justify-between">
-                                    <div
-                                      className={`truncate ${
-                                        user?.role === 'manager'
-                                          ? 'cursor-pointer hover:text-blue-600 hover:underline'
-                                          : ''
-                                      }`}
-                                      title={user?.role === 'manager' ? `${row.customer} (Click to view forecast breakdown)` : row.customer}
-                                      onClick={() => handleCustomerClick(row.customer)}
-                                    >
-                                      {row.customer}
-                                      {user?.role === 'manager' && (
-                                        <span className="ml-1 text-blue-500">👑</span>
-                                      )}
-                                    </div>
-                                    {user?.role === 'manager' && (
-                                      <button
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          setSelectedRowForViewOnly(row);
-                                          setIsViewOnlyModalOpen(true);
-                                        }}
-                                        className="ml-2 w-5 h-5 bg-green-100 hover:bg-green-200 text-green-600 rounded-full flex items-center justify-center text-xs font-bold transition-colors"
-                                        title="View monthly distribution"
-                                      >
-                                        +
-                                      </button>
-                                    )}
                                   </div>
                                 </td>
                               </>

@@ -20,6 +20,7 @@ import { initializeSampleGitData } from '../utils/sampleGitData';
 import { ActivityLogger } from '../utils/activityLogger';
 import ManagerActivityDashboard from '../components/ManagerActivityDashboard';
 import MessagingSystem from '../components/MessagingSystem';
+import { useFullTimeSync } from '../hooks/useTimeSync';
 import {
   getCurrentMonth,
   getCurrentYear,
@@ -27,7 +28,12 @@ import {
   isFutureMonth,
   getFutureMonthsForYear,
   formatDateTimeForDisplay,
-  getTimeAgo
+  getTimeAgo,
+  getAvailableYears,
+  getDefaultYearSelections,
+  getMonthsForYear,
+  isHistoricalYear,
+  formatYearForDisplay
 } from '../utils/timeUtils';
 
 const RollingForecast: React.FC = () => {
@@ -54,6 +60,38 @@ const RollingForecast: React.FC = () => {
   const [showReportView, setShowReportView] = useState(false);
   const [isManagerActivityDashboardOpen, setIsManagerActivityDashboardOpen] = useState(false);
   const [isMessagingSystemOpen, setIsMessagingSystemOpen] = useState(false);
+  const [activeView, setActiveView] = useState('customer-item');
+
+  // Year selection for historical data viewing
+  const [selectedYear, setSelectedYear] = useState(getCurrentYear().toString());
+  const [availableYears, setAvailableYears] = useState(getAvailableYears());
+  const [showHistoricalData, setShowHistoricalData] = useState(false);
+
+  // Dynamic time synchronization
+  const { timeState, forceRefresh, currentYear, currentMonth } = useFullTimeSync(
+    // On month change
+    () => {
+      console.log('Month changed in Rolling Forecast - refreshing data and UI');
+      // Refresh monthly data and recalculate forecasts
+      setMonthlyForecastData(prev => ({ ...prev })); // Trigger re-render
+      // Update available years in case we crossed into a new year
+      setAvailableYears(getAvailableYears());
+    },
+    // On year change
+    () => {
+      console.log('Year changed in Rolling Forecast - major refresh');
+      // Update selected year to current year for new year transition
+      setSelectedYear(getCurrentYear().toString());
+      setAvailableYears(getAvailableYears());
+      // Trigger full data refresh
+      setTableData(prev => [...prev]);
+    },
+    // On any time update
+    (newTimeState) => {
+      // Update page title to reflect current time context
+      document.title = `Rolling Forecast ${newTimeState.currentYear} - STM Budget`;
+    }
+  );
 
   // Sample data
   const [customers, setCustomers] = useState<Customer[]>([
@@ -185,10 +223,17 @@ const RollingForecast: React.FC = () => {
     }
   ]);
 
-  // Load saved forecast data for current user and ensure persistence
+  // Initialize historical data migration on component mount
+  useEffect(() => {
+    DataPersistenceManager.migrateLegacyDataToHistorical();
+  }, []);
+
+  // Load saved forecast data for current user and selected year
   useEffect(() => {
     if (user && tableData.length > 0) {
-      const savedForecastData = DataPersistenceManager.getRollingForecastDataByUser(user.name);
+      const yearToLoad = parseInt(selectedYear);
+      const allForecastData = DataPersistenceManager.getHistoricalDataByYear(yearToLoad, 'rolling_forecast');
+      const savedForecastData = allForecastData.filter((item: any) => item.createdBy === user.name);
       if (savedForecastData.length > 0) {
         console.log('Loading saved forecast data for', user.name, ':', savedForecastData.length, 'items');
 
@@ -244,7 +289,7 @@ const RollingForecast: React.FC = () => {
         console.log('Forecast data persistence loaded - Total items in table:', updatedTableData.length);
       }
     }
-  }, [user, tableData.length]); // Added tableData.length to dependency
+  }, [user, tableData.length, selectedYear]); // Added selectedYear to reload data when year changes
 
   // Auto-save mechanism to persist forecast changes
   useEffect(() => {
@@ -922,15 +967,68 @@ const RollingForecast: React.FC = () => {
 
         {/* Header */}
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-gray-900">Rolling Forecast for 2025-2026</h1>
           <div className="flex items-center gap-4">
-            <label className="flex items-center gap-2">
-              <input type="checkbox" className="rounded" />
-              <span className="text-sm text-gray-700">Item-wise</span>
-            </label>
-            <button className="bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition-colors">
-              Customer-Item
-            </button>
+            <h1 className="text-2xl font-bold text-gray-900">Rolling Forecast</h1>
+            <div className="flex items-center gap-2">
+              <label className="text-sm font-medium text-gray-700">Year:</label>
+              <select
+                value={selectedYear}
+                onChange={(e) => {
+                  setSelectedYear(e.target.value);
+                  console.log('Year changed to:', e.target.value);
+                }}
+                className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm font-medium bg-white"
+              >
+                {availableYears.map(year => (
+                  <option key={year.value} value={year.value}>
+                    {formatYearForDisplay(year.value)}
+                  </option>
+                ))}
+              </select>
+              {isHistoricalYear(parseInt(selectedYear)) && (
+                <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full font-medium">
+                  📚 Historical Data
+                </span>
+              )}
+              {/* Dynamic time indicator */}
+              <div className="flex items-center gap-1 text-xs text-gray-500">
+                <span>📅</span>
+                <span>{timeState.currentMonthName} {timeState.currentYear}</span>
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" title="Live time sync active"></div>
+              </div>
+            </div>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="flex shadow-sm rounded-md overflow-hidden">
+              <button
+                onClick={() => {
+                  console.log('Switching to customer-item view');
+                  setActiveView('customer-item');
+                }}
+                className={`px-6 py-2 font-semibold transition-all duration-200 ${
+                  activeView === 'customer-item'
+                    ? 'bg-orange-500 text-white shadow-md transform scale-105'
+                    : 'bg-white text-gray-600 border border-gray-300 hover:bg-orange-50 hover:text-orange-600'
+                }`}
+                title="View data organized by customer and their items"
+              >
+                Customer - Item
+              </button>
+              <button
+                onClick={() => {
+                  console.log('Switching to item-wise view');
+                  setActiveView('item-wise');
+                }}
+                className={`px-6 py-2 font-semibold transition-all duration-200 ${
+                  activeView === 'item-wise'
+                    ? 'bg-orange-500 text-white shadow-md transform scale-105'
+                    : 'bg-white text-gray-600 border border-gray-300 hover:bg-orange-50 hover:text-orange-600'
+                }`}
+                title="View data organized by items and their customers"
+              >
+                Item Wise
+              </button>
+            </div>
             {/* Manager Activity Dashboard */}
             {user?.role === 'manager' && (
               <button
@@ -1198,6 +1296,43 @@ const RollingForecast: React.FC = () => {
 
         {/* Summary Statistics */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          {isHistoricalYear(parseInt(selectedYear)) && (
+            <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="flex items-center gap-2">
+                <span className="text-blue-600">📚</span>
+                <span className="text-sm font-medium text-blue-800">
+                  Viewing Historical Data for {selectedYear}
+                </span>
+                <span className="text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded-full">
+                  Read-Only
+                </span>
+              </div>
+              <p className="text-xs text-blue-700 mt-1">
+                Historical data from {selectedYear} is displayed for reference and analysis purposes.
+              </p>
+            </div>
+          )}
+
+          {/* Dynamic time status */}
+          <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                <span className="text-sm font-medium text-green-800">
+                  Live Data Sync Active
+                </span>
+                <span className="text-xs text-green-600 bg-green-100 px-2 py-1 rounded-full">
+                  Current: {timeState.currentMonthName} {timeState.currentYear}
+                </span>
+              </div>
+              <div className="text-xs text-green-700">
+                Last updated: {new Date(timeState.lastUpdated).toLocaleTimeString()}
+              </div>
+            </div>
+            <p className="text-xs text-green-700 mt-1">
+              System automatically updates months, dates, and years. Data transitions detected in real-time.
+            </p>
+          </div>
           <div className="grid grid-cols-3 gap-4 text-center mb-6">
             <div className="bg-gray-50 rounded-lg p-4">
               <div className="text-sm text-gray-600 mb-1">Budget 2025</div>
@@ -1392,7 +1527,7 @@ const RollingForecast: React.FC = () => {
                     />
                   </th>
                   <th
-                    className="px-1 sm:px-2 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 w-48"
+                    className={`px-1 sm:px-2 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 w-48 ${activeView === 'item-wise' ? 'hidden' : ''}`}
                     onClick={() => handleSort('customer')}
                   >
                     <div className="flex items-center gap-1">
@@ -1486,7 +1621,7 @@ const RollingForecast: React.FC = () => {
                           onChange={() => handleRowSelect(row.id)}
                         />
                       </td>
-                      <td className="px-2 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                      <td className={`px-2 py-3 whitespace-nowrap text-sm font-medium text-gray-900 ${activeView === 'item-wise' ? 'hidden' : ''}`}>
                         <div className="flex items-center justify-between">
                           <div
                             className={`${
