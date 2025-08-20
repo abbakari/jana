@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { initializeSampleActivities } from './utils/initializeSampleActivities';
 import { AuthProvider, useAuth, canAccessDashboard } from './contexts/AuthContext';
 import { BudgetProvider } from './contexts/BudgetContext';
 import { WorkflowProvider } from './contexts/WorkflowContext';
