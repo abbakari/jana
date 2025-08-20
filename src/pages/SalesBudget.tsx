@@ -1378,6 +1378,31 @@ const SalesBudget: React.FC = () => {
               <StockSummaryWidget compact={false} />
             </div>
 
+            {/* Dynamic Time Status Alert */}
+            <div className="mb-4 p-3 bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-lg">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                    <span className="text-sm font-medium text-green-800">Live Time Sync</span>
+                  </div>
+                  <div className="text-sm text-gray-700">
+                    Current: <span className="font-medium">{timeState.currentMonthName} {timeState.currentYear}</span>
+                  </div>
+                  <div className="text-xs text-gray-500">
+                    Updated: {new Date(timeState.lastUpdated).toLocaleTimeString()}
+                  </div>
+                </div>
+                <button
+                  onClick={forceRefresh}
+                  className="text-xs bg-blue-100 text-blue-800 px-3 py-1 rounded hover:bg-blue-200 transition-colors"
+                  title="Force refresh all time-based data"
+                >
+                  🔄 Refresh
+                </button>
+              </div>
+            </div>
+
             {/* Info Alert and View Toggle */}
             <div className="flex justify-between items-center mb-4">
               {user?.role === 'salesman' ? (
