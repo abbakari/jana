@@ -61,6 +61,22 @@ const continuousRotation = keyframes`
   }
 `;
 
+// Yellow glow pulse effect
+const yellowGlow = keyframes`
+  0%, 100% {
+    box-shadow:
+      0 0 20px rgba(255, 193, 7, 0.3),
+      0 0 40px rgba(255, 193, 7, 0.2),
+      0 0 60px rgba(255, 193, 7, 0.1);
+  }
+  50% {
+    box-shadow:
+      0 0 30px rgba(255, 193, 7, 0.5),
+      0 0 50px rgba(255, 193, 7, 0.3),
+      0 0 70px rgba(255, 193, 7, 0.2);
+  }
+`;
+
 // Container for the moving tyre
 const TyreContainer = styled('div')(() => ({
   position: 'relative',
