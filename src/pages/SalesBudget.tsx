@@ -403,7 +403,7 @@ const SalesBudget: React.FC = () => {
         console.log('Data persistence loaded - Total items in table:', mergedData.length);
       }
     }
-  }, [user, originalTableData.length]); // Added originalTableData.length to dependency
+  }, [user, originalTableData.length, selectedYear2025, selectedYear2026]); // Added year selections to reload data when years change
 
   // Auto-save mechanism to persist data changes
   useEffect(() => {
