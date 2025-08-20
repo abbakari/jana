@@ -1943,55 +1943,55 @@ const SalesBudget: React.FC = () => {
 
                                             if (isLargeItem) {
                                               // Large items: Focus on non-holiday months for maximum sales potential
-                                              // 70% of budget in non-holiday months, 30% in holiday months
+                                              // Heavily concentrate on business-active months
                                               distributionStrategy = [
-                                                0.6,  // Jan (holiday) - reduced
-                                                1.4,  // Feb (non-holiday) - increased
-                                                1.3,  // Mar (non-holiday) - increased
-                                                1.2,  // Apr (non-holiday) - increased
-                                                1.3,  // May (non-holiday) - increased
-                                                1.2,  // Jun (non-holiday) - increased
-                                                0.5,  // Jul (holiday) - reduced
-                                                0.6,  // Aug (holiday) - reduced
-                                                1.4,  // Sep (non-holiday) - increased
-                                                1.3,  // Oct (non-holiday) - increased
-                                                1.2,  // Nov (non-holiday) - increased
-                                                0.5   // Dec (holiday) - reduced
+                                                0.5,  // Jan (holiday) - very low due to New Year
+                                                1.5,  // Feb (non-holiday) - high activity
+                                                1.4,  // Mar (non-holiday) - strong quarter end
+                                                1.3,  // Apr (non-holiday) - Q2 start
+                                                1.4,  // May (non-holiday) - peak business
+                                                1.3,  // Jun (non-holiday) - Q2 end push
+                                                0.4,  // Jul (holiday) - summer break
+                                                0.4,  // Aug (holiday) - summer break
+                                                1.5,  // Sep (non-holiday) - back to business
+                                                1.4,  // Oct (non-holiday) - Q4 start
+                                                1.3,  // Nov (non-holiday) - pre-holiday push
+                                                0.3   // Dec (holiday) - Christmas/year-end - lowest
                                               ];
                                             } else {
-                                              // Small items: Can leverage holiday months for steady sales
-                                              // More balanced distribution with slight holiday preference for smaller orders
+                                              // Small items: More balanced but still avoid peak holiday months
+                                              // Allow some holiday distribution but keep December lowest
                                               distributionStrategy = [
-                                                1.1,  // Jan (holiday) - balanced
-                                                1.0,  // Feb (non-holiday)
-                                                0.9,  // Mar (non-holiday)
-                                                1.0,  // Apr (non-holiday)
-                                                0.9,  // May (non-holiday)
-                                                1.0,  // Jun (non-holiday)
-                                                1.2,  // Jul (holiday) - increased for small items
-                                                1.3,  // Aug (holiday) - increased for small items
-                                                0.9,  // Sep (non-holiday)
-                                                1.0,  // Oct (non-holiday)
-                                                0.9,  // Nov (non-holiday)
-                                                1.3   // Dec (holiday) - increased for small items
+                                                0.8,  // Jan (holiday) - moderate due to New Year
+                                                1.1,  // Feb (non-holiday) - steady
+                                                1.0,  // Mar (non-holiday) - normal
+                                                1.1,  // Apr (non-holiday) - steady
+                                                1.0,  // May (non-holiday) - normal
+                                                1.1,  // Jun (non-holiday) - steady
+                                                0.9,  // Jul (holiday) - slightly reduced summer
+                                                0.9,  // Aug (holiday) - slightly reduced summer
+                                                1.1,  // Sep (non-holiday) - steady
+                                                1.0,  // Oct (non-holiday) - normal
+                                                1.0,  // Nov (non-holiday) - normal
+                                                0.6   // Dec (holiday) - significantly reduced for Christmas
                                               ];
                                             }
 
-                                            // Apply business intelligence: boost Q4 for year-end budget consumption
-                                            // and Q2 for mid-year procurement cycles
+                                            // Apply business intelligence: boost productive months only
+                                            // Avoid boosting December to prevent it from getting high allocation
                                             const businessBoostMultipliers = [
-                                              1.0,  // Jan
-                                              1.0,  // Feb
-                                              1.0,  // Mar
-                                              1.1,  // Apr (Q2 start)
-                                              1.1,  // May (Q2 procurement)
-                                              1.1,  // Jun (Q2 end)
-                                              1.0,  // Jul
-                                              1.0,  // Aug
-                                              1.0,  // Sep
-                                              1.1,  // Oct (Q4 start)
-                                              1.2,  // Nov (Q4 procurement)
-                                              1.1   // Dec (Q4 year-end)
+                                              1.0,  // Jan - no boost due to holiday
+                                              1.1,  // Feb - slight boost for post-holiday activity
+                                              1.1,  // Mar - Q1 end boost
+                                              1.2,  // Apr - Q2 start boost
+                                              1.1,  // May - mid-year steady
+                                              1.2,  // Jun - Q2 end boost
+                                              1.0,  // Jul - no boost due to summer
+                                              1.0,  // Aug - no boost due to summer
+                                              1.1,  // Sep - back to business boost
+                                              1.2,  // Oct - Q4 start boost
+                                              1.2,  // Nov - pre-holiday business boost
+                                              0.8   // Dec - negative adjustment to ensure lowest allocation
                                             ];
 
                                             // Combine strategies for intelligent distribution
@@ -2015,9 +2015,14 @@ const SalesBudget: React.FC = () => {
                                             // Show notification about the strategy applied
                                             const strategy = isLargeItem ? 'Large Item Strategy' : 'Small Item Strategy';
                                             const explanation = isLargeItem
-                                              ? 'Focused distribution on non-holiday months for maximum sales potential'
-                                              : 'Balanced distribution leveraging holiday months for steady small orders';
-                                            showNotification(`${strategy}: ${explanation}`, 'success');
+                                              ? 'Concentrated on non-holiday months, December gets minimal allocation'
+                                              : 'Balanced distribution with December kept low for holiday period';
+
+                                            // Calculate December's percentage for verification
+                                            const decemberIndex = 11;
+                                            const decemberPercentage = ((normalizedMultipliers[decemberIndex] / 12) * 100).toFixed(1);
+
+                                            showNotification(`${strategy}: ${explanation}. December: ${decemberPercentage}% of total`, 'success');
                                           }}
                                           className="bg-green-100 text-green-800 px-3 py-1 rounded text-xs hover:bg-green-200 transition-colors"
                                           title="Smart seasonal distribution: Large items focused on non-holiday months, small items balanced across all months"
