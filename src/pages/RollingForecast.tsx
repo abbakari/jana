@@ -196,10 +196,17 @@ const RollingForecast: React.FC = () => {
     }
   ]);
 
-  // Load saved forecast data for current user and ensure persistence
+  // Initialize historical data migration on component mount
+  useEffect(() => {
+    DataPersistenceManager.migrateLegacyDataToHistorical();
+  }, []);
+
+  // Load saved forecast data for current user and selected year
   useEffect(() => {
     if (user && tableData.length > 0) {
-      const savedForecastData = DataPersistenceManager.getRollingForecastDataByUser(user.name);
+      const yearToLoad = parseInt(selectedYear);
+      const allForecastData = DataPersistenceManager.getHistoricalDataByYear(yearToLoad, 'rolling_forecast');
+      const savedForecastData = allForecastData.filter((item: any) => item.createdBy === user.name);
       if (savedForecastData.length > 0) {
         console.log('Loading saved forecast data for', user.name, ':', savedForecastData.length, 'items');
 
