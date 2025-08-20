@@ -929,6 +929,17 @@ const RollingForecast: React.FC = () => {
             <button className="bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition-colors">
               Customer-Item
             </button>
+            {/* Manager Activity Dashboard */}
+            {user?.role === 'manager' && (
+              <button
+                onClick={() => setIsManagerActivityDashboardOpen(true)}
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+                title="Monitor salesman activities"
+              >
+                <span>📊</span>
+                <span>Activity Monitor</span>
+              </button>
+            )}
             {/* Follow-backs button for salesman and manager */}
             {(user?.role === 'salesman' || user?.role === 'manager') && (
               <FollowBacksButton />
