@@ -1024,7 +1024,7 @@ const SalesBudget: React.FC = () => {
     ? tableData.reduce((sum, item) => sum + Math.floor(item.actual2025 / (item.rate || 1)), 0)
     : 0;
 
-  const budgetGrowth = totalBudget2025 > 0 ? ((totalBudget2026 - totalBudget2025) / totalBudget2025) * 100 : 0;
+  const budgetGrowth = totalBudget2025 > 0 ? Math.max(0, ((totalBudget2026 - totalBudget2025) / totalBudget2025) * 100) : 0;
 
   return (
     <Layout>
