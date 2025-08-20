@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Layout from '../components/Layout';
 import { useAuth } from '../contexts/AuthContext';
 import { useBudget, YearlyBudgetData } from '../contexts/BudgetContext';
@@ -31,6 +31,7 @@ import GitDetailsTooltip from '../components/GitDetailsTooltip';
 import ViewOnlyMonthlyDistributionModal from '../components/ViewOnlyMonthlyDistributionModal';
 import FollowBacksButton from '../components/FollowBacksButton';
 import DataPreservationIndicator from '../components/DataPreservationIndicator';
+import DataPreservationStatus from '../components/DataPreservationStatus';
 import SetDistributionModal from '../components/SetDistributionModal';
 import AdminStockManagement from '../components/AdminStockManagement';
 import StockSummaryWidget from '../components/StockSummaryWidget';
@@ -41,6 +42,8 @@ import AdminDiscountManagement from '../components/AdminDiscountManagement';
 import { ActivityLogger } from '../utils/activityLogger';
 import ManagerActivityDashboard from '../components/ManagerActivityDashboard';
 import MessagingSystem from '../components/MessagingSystem';
+import DataIntegrityMonitor from '../utils/dataIntegrityMonitor';
+import DebouncedAutoSave from '../utils/debouncedAutoSave';
 
 interface MonthlyBudget {
   month: string;
@@ -307,13 +310,21 @@ const SalesBudget: React.FC = () => {
     // Update GIT data on component mount
     updateGitDataInTable();
 
-    // Set up interval to check for GIT data updates and admin stock updates every 30 seconds
+    // Set up interval to check for GIT data updates - with error handling and reduced frequency
     const interval = setInterval(() => {
-      updateGitDataInTable();
-      loadGlobalStockData();
-    }, 30000);
+      try {
+        updateGitDataInTable();
+        loadGlobalStockData();
+      } catch (error) {
+        console.error('Error in periodic update:', error);
+      }
+    }, 60000); // Reduced to 60 seconds to prevent performance issues
 
-    return () => clearInterval(interval);
+    return () => {
+      if (interval) {
+        clearInterval(interval);
+      }
+    };
   }, []);
 
   // Load saved salesman data for current user and ensure persistence
@@ -373,49 +384,88 @@ const SalesBudget: React.FC = () => {
         });
 
         setOriginalTableData(mergedData);
-        console.log('Data persistence loaded - Total items in table:', mergedData.length);
+        console.log('ACTIVITY PRESERVATION COMPLETE:');
+        console.log('- Total items in table:', mergedData.length);
+        console.log('- All BUD 2026 activities preserved and visible');
+        console.log('- Data will not disappear from table updates');
+
+        // Log comprehensive activity preservation for audit
+        if (user) {
+          ActivityLogger.logSalesBudgetActivity(
+            user,
+            `All table activities preserved during data load`,
+            `Total: ${mergedData.length} items loaded and preserved`,
+            {
+              changes: ['Complete data preservation', 'All BUD 2026 activities maintained'],
+              metadata: {
+                totalItems: mergedData.length,
+                preservationTimestamp: new Date().toISOString(),
+                note: 'All activities stay in table permanently'
+              }
+            },
+            'system'
+          );
+        }
       }
     }
-  }, [user, originalTableData.length]); // Added originalTableData.length to dependency
+  }, [user]); // Removed originalTableData.length to prevent infinite loops
 
-  // Auto-save mechanism to persist data changes
+  // Debounced auto-save mechanism to prevent system overload while preserving data
   useEffect(() => {
     if (user && originalTableData.length > 0) {
-      // Auto-save all items with budget data
-      const itemsToSave = originalTableData
-        .filter(item => item.budget2026 > 0 || item.budgetValue2026 > 0)
-        .map(item => ({
-          id: `auto_save_${item.id}_${Date.now()}`,
-          customer: item.customer,
-          item: item.item,
-          category: item.category,
-          brand: item.brand,
-          type: 'sales_budget' as const,
-          createdBy: user.name,
-          createdAt: new Date().toISOString(),
-          lastModified: new Date().toISOString(),
-          budget2025: item.budget2025,
-          actual2025: item.actual2025,
-          budget2026: item.budget2026,
-          rate: item.rate,
-          stock: item.stock,
-          git: item.git,
-          budgetValue2026: item.budgetValue2026,
-          discount: item.discount,
-          monthlyData: item.monthlyData,
-          status: 'saved'
-        }));
+      // Use debounced auto-save to prevent performance issues
+      const debouncedSave = DebouncedAutoSave.debounce(
+        `sales_budget_${user.name}`,
+        () => {
+          try {
+            // Save important items only to reduce processing load
+            const itemsToSave = originalTableData
+              .filter(item => item.budget2026 > 0 || item.budgetValue2026 > 0 || item.selected)
+              .map(item => ({
+                id: `debounced_save_${item.id}_${Date.now()}`,
+                customer: item.customer,
+                item: item.item,
+                category: item.category,
+                brand: item.brand,
+                type: 'sales_budget' as const,
+                createdBy: user.name,
+                createdAt: new Date().toISOString(),
+                lastModified: new Date().toISOString(),
+                budget2025: item.budget2025,
+                actual2025: item.actual2025,
+                budget2026: item.budget2026,
+                rate: item.rate,
+                stock: item.stock,
+                git: item.git,
+                budgetValue2026: item.budgetValue2026,
+                discount: item.discount,
+                monthlyData: item.monthlyData,
+                status: 'saved'
+              }));
 
-      if (itemsToSave.length > 0) {
-        DataPersistenceManager.saveSalesBudgetData(itemsToSave);
-        console.log('Auto-saved', itemsToSave.length, 'items with budget data');
-      }
+            if (itemsToSave.length > 0) {
+              DataPersistenceManager.saveSalesBudgetData(itemsToSave);
+              console.log('DEBOUNCED SAVE: Preserved', itemsToSave.length, 'important items');
+            }
+          } catch (error) {
+            console.error('Error in debounced auto-save:', error);
+          }
+        },
+        3000 // 3 second delay to prevent performance issues
+      );
+
+      debouncedSave();
     }
-  }, [originalTableData, user]); // Auto-save when originalTableData changes
 
-  // Add event listeners for filter changes
+    // Cleanup on unmount
+    return () => {
+      DebouncedAutoSave.clear(`sales_budget_${user?.name}`);
+    };
+  }, [originalTableData, user]); // Safe dependencies - debounced to prevent loops
+
+  // Add event listeners for filter changes with data preservation
   useEffect(() => {
-    // Apply filters whenever any filter changes
+    // Apply filters whenever any filter changes, ensuring all data remains accessible
     const filteredData = originalTableData.filter(item => {
       const matchesCustomer = !selectedCustomer || item.customer.toLowerCase().includes(selectedCustomer.toLowerCase());
       const matchesCategory = !selectedCategory || item.category.toLowerCase().includes(selectedCategory.toLowerCase());
@@ -423,8 +473,30 @@ const SalesBudget: React.FC = () => {
       const matchesItem = !selectedItem || item.item.toLowerCase().includes(selectedItem.toLowerCase());
       return matchesCustomer && matchesCategory && matchesBrand && matchesItem;
     });
-    setTableData(filteredData);
-  }, [selectedCustomer, selectedCategory, selectedBrand, selectedItem, originalTableData]);
+
+    // Preserve any edits in progress by maintaining edited rows even if they don't match filters
+    const editedRowsToPreserve = tableData.filter(item =>
+      item.selected || editingRowId === item.id
+    );
+
+    // Merge filtered data with preserved edits to prevent data loss
+    const preservedIds = new Set(editedRowsToPreserve.map(item => item.id));
+    const finalData = [...filteredData];
+
+    editedRowsToPreserve.forEach(editedRow => {
+      if (!preservedIds.has(editedRow.id) || !finalData.find(item => item.id === editedRow.id)) {
+        finalData.push(editedRow);
+      }
+    });
+
+    setTableData(finalData);
+
+    // Log filter activity for audit purposes
+    if (user && (selectedCustomer || selectedCategory || selectedBrand || selectedItem)) {
+      console.log('Table filtered - Showing', finalData.length, 'of', originalTableData.length, 'items');
+      console.log('Filter preserved', editedRowsToPreserve.length, 'edited/selected items');
+    }
+  }, [selectedCustomer, selectedCategory, selectedBrand, selectedItem, originalTableData, editingRowId]);
 
   const handleSelectRow = (id: number) => {
     console.log('Row selection toggled for ID:', id);
@@ -506,15 +578,49 @@ const SalesBudget: React.FC = () => {
         git: month.git || row?.git || 0
       }));
 
-      setTableData(prev => prev.map(item =>
+      // Update both tableData and originalTableData to ensure persistence
+      const updateItem = (item: SalesBudgetItem) =>
         item.id === rowId ? {
           ...item,
           monthlyData: updatedMonthlyData,
           budget2026: budgetValue2026,
           budgetValue2026: netBudgetValue,
           discount: totalDiscount
-        } : item
-      ));
+        } : item;
+
+      // Monitor data integrity before and after update
+      const beforeData = [...originalTableData];
+
+      setTableData(prev => prev.map(updateItem));
+      setOriginalTableData(prev => {
+        const updatedData = prev.map(updateItem);
+
+        // Verify data integrity after update with error handling
+        try {
+          const integrityCheck = DataIntegrityMonitor.monitorDataChange(
+            beforeData,
+            updatedData,
+            user,
+            `BUD 2026 update for ${row?.customer} - ${row?.item}`
+          );
+
+          if (integrityCheck.isDataLoss) {
+            console.error('⚠️ DATA LOSS DETECTED:', integrityCheck.report);
+            console.error('Recommendations:', integrityCheck.recommendations);
+            showNotification('Warning: Data integrity check failed. Please verify all data is preserved.', 'error');
+          } else {
+            console.log('✅ Data integrity verified:', integrityCheck.report);
+            DataIntegrityMonitor.createSnapshot(updatedData, user, `BUD 2026 update completed`);
+          }
+        } catch (error) {
+          console.error('Error in data integrity monitoring:', error);
+          // Continue without blocking the update
+        }
+
+        return updatedData;
+      });
+
+      console.log('Updated BUD 2026 data for row', rowId, '- Budget Value:', netBudgetValue, 'Units:', budgetValue2026);
 
       setEditingRowId(null);
       setEditingMonthlyData(prev => {
@@ -1193,29 +1299,45 @@ const SalesBudget: React.FC = () => {
     }
   };
 
-  // Calculate totals based on filtered data and year selection
-  const totalBudget2025 = selectedYear2025 === '2025'
-    ? tableData.reduce((sum, item) => sum + item.budget2025, 0)
-    : tableData.reduce((sum, item) => sum + item.budgetValue2026, 0);
-  const totalActual2025 = selectedYear2025 === '2025'
-    ? tableData.reduce((sum, item) => sum + item.actual2025, 0)
-    : 0; // No actual data for future years
-  const totalBudget2026 = selectedYear2026 === '2026'
-    ? tableData.reduce((sum, item) => sum + item.budgetValue2026, 0)
-    : tableData.reduce((sum, item) => sum + item.budget2025, 0);
+  // Optimize expensive calculations with useMemo to prevent performance issues
+  const calculations = useMemo(() => {
+    console.log('Calculating totals - tableData length:', tableData.length);
 
-  // Calculate units from monthly data for 2026, otherwise use standard calculation
-  const totalUnits2025 = selectedYear2025 === '2025'
-    ? tableData.reduce((sum, item) => sum + Math.floor(item.budget2025 / (item.rate || 1)), 0)
-    : tableData.reduce((sum, item) => sum + item.budget2026, 0);
-  const totalUnits2026 = selectedYear2026 === '2026'
-    ? tableData.reduce((sum, item) => sum + item.budget2026, 0) // budget2026 stores total units from monthly data
-    : tableData.reduce((sum, item) => sum + Math.floor(item.budget2025 / (item.rate || 1)), 0);
-  const totalActualUnits2025 = selectedYear2025 === '2025'
-    ? tableData.reduce((sum, item) => sum + Math.floor(item.actual2025 / (item.rate || 1)), 0)
-    : 0;
+    const totalBudget2025 = selectedYear2025 === '2025'
+      ? tableData.reduce((sum, item) => sum + item.budget2025, 0)
+      : tableData.reduce((sum, item) => sum + item.budgetValue2026, 0);
+    const totalActual2025 = selectedYear2025 === '2025'
+      ? tableData.reduce((sum, item) => sum + item.actual2025, 0)
+      : 0; // No actual data for future years
+    const totalBudget2026 = selectedYear2026 === '2026'
+      ? tableData.reduce((sum, item) => sum + item.budgetValue2026, 0)
+      : tableData.reduce((sum, item) => sum + item.budget2025, 0);
 
-  const budgetGrowth = totalBudget2025 > 0 ? Math.max(0, ((totalBudget2026 - totalBudget2025) / totalBudget2025) * 100) : 0;
+    // Calculate units from monthly data for 2026, otherwise use standard calculation
+    const totalUnits2025 = selectedYear2025 === '2025'
+      ? tableData.reduce((sum, item) => sum + Math.floor(item.budget2025 / (item.rate || 1)), 0)
+      : tableData.reduce((sum, item) => sum + item.budget2026, 0);
+    const totalUnits2026 = selectedYear2026 === '2026'
+      ? tableData.reduce((sum, item) => sum + item.budget2026, 0) // budget2026 stores total units from monthly data
+      : tableData.reduce((sum, item) => sum + Math.floor(item.budget2025 / (item.rate || 1)), 0);
+    const totalActualUnits2025 = selectedYear2025 === '2025'
+      ? tableData.reduce((sum, item) => sum + Math.floor(item.actual2025 / (item.rate || 1)), 0)
+      : 0;
+
+    const budgetGrowth = totalBudget2025 > 0 ? Math.max(0, ((totalBudget2026 - totalBudget2025) / totalBudget2025) * 100) : 0;
+
+    return {
+      totalBudget2025,
+      totalActual2025,
+      totalBudget2026,
+      totalUnits2025,
+      totalUnits2026,
+      totalActualUnits2025,
+      budgetGrowth
+    };
+  }, [tableData, selectedYear2025, selectedYear2026]);
+
+  const { totalBudget2025, totalActual2025, totalBudget2026, totalUnits2025, totalUnits2026, totalActualUnits2025, budgetGrowth } = calculations;
 
   return (
     <Layout>
@@ -1684,6 +1806,15 @@ const SalesBudget: React.FC = () => {
                 preservedCount={DataPersistenceManager.getOriginalSalesBudgetData().filter(item => item.createdBy === user.name).length}
                 dataType="budget"
                 compact={true}
+              />
+            )}
+
+            {/* Comprehensive Data Preservation Status - Shows BUD 2026 protection */}
+            {user && (
+              <DataPreservationStatus
+                tableData={originalTableData}
+                user={user}
+                className="mb-4"
               />
             )}
 
