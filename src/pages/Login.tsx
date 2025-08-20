@@ -542,7 +542,8 @@ const Login: React.FC = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  sx={{ mb: 3 }}
+                  size="small"
+                  sx={{ mb: 2 }}
                   InputProps={{
                     startAdornment: (
                       <InputAdornment position="start">
