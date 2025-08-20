@@ -2234,6 +2234,25 @@ const SalesBudget: React.FC = () => {
                                               }) || []
                                             }));
 
+                                            // Log activity for manager visibility
+                                            if (user) {
+                                              ActivityLogger.logSalesBudgetActivity(
+                                                user,
+                                                `Applied seasonal growth distribution`,
+                                                `${row.customer} - ${row.item}`,
+                                                {
+                                                  changes: ['Seasonal growth distribution applied'],
+                                                  metadata: {
+                                                    strategy: isLargeItem ? 'Large Item Strategy' : 'Small Item Strategy',
+                                                    totalBudget,
+                                                    itemValue,
+                                                    isLargeItem
+                                                  }
+                                                },
+                                                'update'
+                                              );
+                                            }
+
                                             // Show notification about the strategy applied
                                             const strategy = isLargeItem ? 'Large Item Strategy' : 'Small Item Strategy';
                                             const explanation = isLargeItem
