@@ -351,7 +351,7 @@ export const onYearTransition = (callback: TransitionCallback): (() => void) => 
   };
 };
 
-const notifyMonthTransition = () => {
+const notifyMonthTransition = async () => {
   monthTransitionCallbacks.forEach(callback => {
     try {
       callback();
@@ -359,9 +359,21 @@ const notifyMonthTransition = () => {
       console.error('Error in month transition callback:', error);
     }
   });
+
+  // Trigger comprehensive transition handling
+  try {
+    const { timeTransitionHandler } = await import('./timeTransitionHandler');
+    const currentMonth = getCurrentMonth();
+    const previousMonth = currentMonth === 0 ? 11 : currentMonth - 1;
+    const currentYear = getCurrentYear();
+
+    await timeTransitionHandler.handleMonthTransition(previousMonth, currentMonth, currentYear);
+  } catch (error) {
+    console.error('Error in comprehensive month transition handling:', error);
+  }
 };
 
-const notifyYearTransition = () => {
+const notifyYearTransition = async () => {
   yearTransitionCallbacks.forEach(callback => {
     try {
       callback();
@@ -369,6 +381,17 @@ const notifyYearTransition = () => {
       console.error('Error in year transition callback:', error);
     }
   });
+
+  // Trigger comprehensive transition handling
+  try {
+    const { timeTransitionHandler } = await import('./timeTransitionHandler');
+    const currentYear = getCurrentYear();
+    const previousYear = currentYear - 1;
+
+    await timeTransitionHandler.handleYearTransition(previousYear, currentYear);
+  } catch (error) {
+    console.error('Error in comprehensive year transition handling:', error);
+  }
 };
 
 // Dynamic time-based calculations that auto-update
