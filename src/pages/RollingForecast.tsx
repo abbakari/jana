@@ -64,8 +64,34 @@ const RollingForecast: React.FC = () => {
 
   // Year selection for historical data viewing
   const [selectedYear, setSelectedYear] = useState(getCurrentYear().toString());
-  const [availableYears] = useState(getAvailableYears());
+  const [availableYears, setAvailableYears] = useState(getAvailableYears());
   const [showHistoricalData, setShowHistoricalData] = useState(false);
+
+  // Dynamic time synchronization
+  const { timeState, forceRefresh, currentYear, currentMonth } = useFullTimeSync(
+    // On month change
+    () => {
+      console.log('Month changed in Rolling Forecast - refreshing data and UI');
+      // Refresh monthly data and recalculate forecasts
+      setMonthlyForecastData(prev => ({ ...prev })); // Trigger re-render
+      // Update available years in case we crossed into a new year
+      setAvailableYears(getAvailableYears());
+    },
+    // On year change
+    () => {
+      console.log('Year changed in Rolling Forecast - major refresh');
+      // Update selected year to current year for new year transition
+      setSelectedYear(getCurrentYear().toString());
+      setAvailableYears(getAvailableYears());
+      // Trigger full data refresh
+      setTableData(prev => [...prev]);
+    },
+    // On any time update
+    (newTimeState) => {
+      // Update page title to reflect current time context
+      document.title = `Rolling Forecast ${newTimeState.currentYear} - STM Budget`;
+    }
+  );
 
   // Sample data
   const [customers, setCustomers] = useState<Customer[]>([
