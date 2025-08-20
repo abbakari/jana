@@ -306,16 +306,23 @@ const SalesBudget: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // Load saved salesman data for current user
+  // Load saved salesman data for current user and ensure persistence
   useEffect(() => {
-    if (user) {
+    if (user && originalTableData.length > 0) {
       const savedBudgetData = DataPersistenceManager.getSalesBudgetDataByUser(user.name);
       if (savedBudgetData.length > 0) {
         console.log('Loading saved budget data for', user.name, ':', savedBudgetData.length, 'items');
 
-        // Merge saved data with original table data
-        const mergedData = [...originalTableData];
+        // Create a map of saved data for quick lookup
+        const savedDataMap = new Map(savedBudgetData.map(item =>
+          [`${item.customer}_${item.item}`, item]
+        ));
 
+        // Merge saved data with original table data, ensuring all saved items are preserved
+        const mergedData = [...originalTableData];
+        const existingKeys = new Set(mergedData.map(item => `${item.customer}_${item.item}`));
+
+        // Update existing items with saved data
         savedBudgetData.forEach(savedItem => {
           const existingIndex = mergedData.findIndex(item =>
             item.customer === savedItem.customer && item.item === savedItem.item
@@ -331,9 +338,9 @@ const SalesBudget: React.FC = () => {
               monthlyData: savedItem.monthlyData
             };
           } else {
-            // Add new item from saved data
+            // Add new item from saved data (this ensures new additions are preserved)
             const newItem = {
-              id: Math.max(...mergedData.map(item => item.id)) + 1,
+              id: Math.max(0, ...mergedData.map(item => item.id)) + 1,
               selected: false,
               customer: savedItem.customer,
               item: savedItem.item,
@@ -351,13 +358,50 @@ const SalesBudget: React.FC = () => {
               monthlyData: savedItem.monthlyData
             };
             mergedData.push(newItem);
+            console.log('Added new item from saved data:', newItem.customer, '-', newItem.item);
           }
         });
 
         setOriginalTableData(mergedData);
+        console.log('Data persistence loaded - Total items in table:', mergedData.length);
       }
     }
-  }, [user]);
+  }, [user, originalTableData.length]); // Added originalTableData.length to dependency
+
+  // Auto-save mechanism to persist data changes
+  useEffect(() => {
+    if (user && originalTableData.length > 0) {
+      // Auto-save all items with budget data
+      const itemsToSave = originalTableData
+        .filter(item => item.budget2026 > 0 || item.budgetValue2026 > 0)
+        .map(item => ({
+          id: `auto_save_${item.id}_${Date.now()}`,
+          customer: item.customer,
+          item: item.item,
+          category: item.category,
+          brand: item.brand,
+          type: 'sales_budget' as const,
+          createdBy: user.name,
+          createdAt: new Date().toISOString(),
+          lastModified: new Date().toISOString(),
+          budget2025: item.budget2025,
+          actual2025: item.actual2025,
+          budget2026: item.budget2026,
+          rate: item.rate,
+          stock: item.stock,
+          git: item.git,
+          budgetValue2026: item.budgetValue2026,
+          discount: item.discount,
+          monthlyData: item.monthlyData,
+          status: 'saved'
+        }));
+
+      if (itemsToSave.length > 0) {
+        DataPersistenceManager.saveSalesBudgetData(itemsToSave);
+        console.log('Auto-saved', itemsToSave.length, 'items with budget data');
+      }
+    }
+  }, [originalTableData, user]); // Auto-save when originalTableData changes
 
   // Add event listeners for filter changes
   useEffect(() => {
