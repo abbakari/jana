@@ -51,6 +51,7 @@ const RollingForecast: React.FC = () => {
   const [selectedRowForViewOnly, setSelectedRowForViewOnly] = useState<any>(null);
   const [isStockManagementModalOpen, setIsStockManagementModalOpen] = useState(false);
   const [showReportView, setShowReportView] = useState(false);
+  const [isManagerActivityDashboardOpen, setIsManagerActivityDashboardOpen] = useState(false);
 
   // Sample data
   const [customers, setCustomers] = useState<Customer[]>([
