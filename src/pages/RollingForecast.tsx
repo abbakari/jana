@@ -61,6 +61,11 @@ const RollingForecast: React.FC = () => {
   const [isMessagingSystemOpen, setIsMessagingSystemOpen] = useState(false);
   const [activeView, setActiveView] = useState('customer-item');
 
+  // Year selection for historical data viewing
+  const [selectedYear, setSelectedYear] = useState(getCurrentYear().toString());
+  const [availableYears] = useState(getAvailableYears());
+  const [showHistoricalData, setShowHistoricalData] = useState(false);
+
   // Sample data
   const [customers, setCustomers] = useState<Customer[]>([
     {
