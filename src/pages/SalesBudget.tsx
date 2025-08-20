@@ -16,7 +16,8 @@ import {
   Send,
   Package,
   Users,
-  Activity
+  Activity,
+  MessageCircle
 } from 'lucide-react';
 import ExportModal, { ExportConfig } from '../components/ExportModal';
 import NewAdditionModal, { NewItemData } from '../components/NewAdditionModal';
