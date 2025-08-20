@@ -2129,10 +2129,20 @@ const SalesBudget: React.FC = () => {
                                             const baseValue = totalBudget / 12;
                                             setEditingMonthlyData(prev => ({
                                               ...prev,
-                                              [row.id]: prev[row.id]?.map((month, index) => ({
-                                                ...month,
-                                                budgetValue: Math.round(baseValue * normalizedMultipliers[index])
-                                              })) || []
+                                              [row.id]: prev[row.id]?.map((month, index) => {
+                                                const budgetValue = Math.round(baseValue * normalizedMultipliers[index]);
+                                                const discountAmount = DiscountCalculator.calculateDiscountAmount(
+                                                  budgetValue * (row.rate || 1),
+                                                  row.category,
+                                                  row.brand
+                                                );
+
+                                                return {
+                                                  ...month,
+                                                  budgetValue,
+                                                  discount: discountAmount
+                                                };
+                                              }) || []
                                             }));
 
                                             // Show notification about the strategy applied
