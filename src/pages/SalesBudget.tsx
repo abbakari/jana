@@ -926,6 +926,23 @@ const SalesBudget: React.FC = () => {
 
         DataPersistenceManager.saveSalesBudgetData([savedData]);
         console.log('New item immediately saved to prevent disappearing:', savedData);
+
+        // Log activity for manager visibility
+        ActivityLogger.logSalesBudgetActivity(
+          user,
+          `Added new item to sales budget`,
+          `${newRow.customer} - ${newRow.item}`,
+          {
+            changes: ['New item created'],
+            metadata: {
+              category: newRow.category,
+              brand: newRow.brand,
+              rate: newRow.rate,
+              stock: newRow.stock
+            }
+          },
+          'create'
+        );
       }
 
       showNotification(`Item "${itemData.itemName}" added successfully and saved`, 'success');
