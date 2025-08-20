@@ -933,7 +933,31 @@ const RollingForecast: React.FC = () => {
 
         {/* Header */}
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-gray-900">Rolling Forecast for 2025-2026</h1>
+          <div className="flex items-center gap-4">
+            <h1 className="text-2xl font-bold text-gray-900">Rolling Forecast</h1>
+            <div className="flex items-center gap-2">
+              <label className="text-sm font-medium text-gray-700">Year:</label>
+              <select
+                value={selectedYear}
+                onChange={(e) => {
+                  setSelectedYear(e.target.value);
+                  console.log('Year changed to:', e.target.value);
+                }}
+                className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm font-medium bg-white"
+              >
+                {availableYears.map(year => (
+                  <option key={year.value} value={year.value}>
+                    {formatYearForDisplay(year.value)}
+                  </option>
+                ))}
+              </select>
+              {isHistoricalYear(parseInt(selectedYear)) && (
+                <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full font-medium">
+                  📚 Historical Data
+                </span>
+              )}
+            </div>
+          </div>
           <div className="flex items-center gap-4">
             <div className="flex shadow-sm rounded-md overflow-hidden">
               <button
