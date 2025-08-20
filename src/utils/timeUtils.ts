@@ -248,3 +248,180 @@ export const getMonthsForYear = (year: number) => {
     };
   });
 };
+
+// Dynamic Time Observer System for Real-time Updates
+export const subscribeToTimeUpdates = (callback: TimeUpdateCallback): (() => void) => {
+  timeObservers.push(callback);
+
+  // Start the time update interval if not already running
+  if (!timeUpdateInterval) {
+    startTimeUpdates();
+  }
+
+  // Return unsubscribe function
+  return () => {
+    timeObservers = timeObservers.filter(observer => observer !== callback);
+
+    // Stop interval if no more observers
+    if (timeObservers.length === 0 && timeUpdateInterval) {
+      clearInterval(timeUpdateInterval);
+      timeUpdateInterval = null;
+    }
+  };
+};
+
+export const startTimeUpdates = () => {
+  if (timeUpdateInterval) return; // Already running
+
+  // Update every minute to catch month/year transitions
+  timeUpdateInterval = setInterval(() => {
+    const currentTime = getCurrentDate();
+
+    // Notify all observers of time update
+    timeObservers.forEach(callback => {
+      try {
+        callback(currentTime);
+      } catch (error) {
+        console.error('Error in time update callback:', error);
+      }
+    });
+
+    // Check for month transition
+    if (hasMonthChanged()) {
+      console.log('Month transition detected, triggering refresh');
+      notifyMonthTransition();
+    }
+
+    // Check for year transition
+    if (hasYearChanged()) {
+      console.log('Year transition detected, triggering refresh');
+      notifyYearTransition();
+    }
+  }, 60000); // Check every minute
+
+  console.log('Dynamic time system started - updating every minute');
+};
+
+export const stopTimeUpdates = () => {
+  if (timeUpdateInterval) {
+    clearInterval(timeUpdateInterval);
+    timeUpdateInterval = null;
+    console.log('Dynamic time system stopped');
+  }
+};
+
+// Month and Year transition detection
+let lastCheckedMonth = getCurrentMonth();
+let lastCheckedYear = getCurrentYear();
+
+export const hasMonthChanged = (): boolean => {
+  const currentMonth = getCurrentMonth();
+  if (currentMonth !== lastCheckedMonth) {
+    lastCheckedMonth = currentMonth;
+    return true;
+  }
+  return false;
+};
+
+export const hasYearChanged = (): boolean => {
+  const currentYear = getCurrentYear();
+  if (currentYear !== lastCheckedYear) {
+    lastCheckedYear = currentYear;
+    return true;
+  }
+  return false;
+};
+
+// Event system for major time transitions
+type TransitionCallback = () => void;
+let monthTransitionCallbacks: TransitionCallback[] = [];
+let yearTransitionCallbacks: TransitionCallback[] = [];
+
+export const onMonthTransition = (callback: TransitionCallback): (() => void) => {
+  monthTransitionCallbacks.push(callback);
+  return () => {
+    monthTransitionCallbacks = monthTransitionCallbacks.filter(cb => cb !== callback);
+  };
+};
+
+export const onYearTransition = (callback: TransitionCallback): (() => void) => {
+  yearTransitionCallbacks.push(callback);
+  return () => {
+    yearTransitionCallbacks = yearTransitionCallbacks.filter(cb => cb !== callback);
+  };
+};
+
+const notifyMonthTransition = () => {
+  monthTransitionCallbacks.forEach(callback => {
+    try {
+      callback();
+    } catch (error) {
+      console.error('Error in month transition callback:', error);
+    }
+  });
+};
+
+const notifyYearTransition = () => {
+  yearTransitionCallbacks.forEach(callback => {
+    try {
+      callback();
+    } catch (error) {
+      console.error('Error in year transition callback:', error);
+    }
+  });
+};
+
+// Dynamic time-based calculations that auto-update
+export const getDynamicTimeInfo = () => {
+  const now = getCurrentDate();
+  return {
+    timestamp: now.getTime(),
+    currentMonth: getCurrentMonth(),
+    currentYear: getCurrentYear(),
+    currentQuarter: getCurrentQuarter(),
+    isWorkingHour: isWorkingHour(),
+    dayOfWeek: now.getDay(),
+    dayOfMonth: now.getDate(),
+    weekOfYear: Math.ceil((now.getTime() - new Date(now.getFullYear(), 0, 1).getTime()) / (7 * 24 * 60 * 60 * 1000)),
+    isLeapYear: new Date(now.getFullYear(), 1, 29).getMonth() === 1,
+    remainingDaysInMonth: new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate() - now.getDate(),
+    remainingDaysInYear: Math.ceil((new Date(now.getFullYear() + 1, 0, 1).getTime() - now.getTime()) / (24 * 60 * 60 * 1000))
+  };
+};
+
+// Auto-updating year selections
+export const getAutoUpdatingYearSelections = () => {
+  const currentYear = getCurrentYear();
+  return {
+    historical: getHistoricalYears().filter(year => year < currentYear),
+    current: currentYear,
+    future: [currentYear + 1, currentYear + 2],
+    all: getHistoricalYears(),
+    defaultSelections: getDefaultYearSelections()
+  };
+};
+
+// Time-based data validation
+export const isDataStillValid = (dataTimestamp: string, maxAgeMinutes: number = 60): boolean => {
+  const dataTime = new Date(dataTimestamp).getTime();
+  const currentTime = getCurrentDate().getTime();
+  const ageInMinutes = (currentTime - dataTime) / (1000 * 60);
+  return ageInMinutes <= maxAgeMinutes;
+};
+
+// Smart cache invalidation based on time
+export const shouldRefreshData = (lastRefresh: string, forceRefreshOnNewDay: boolean = true): boolean => {
+  const lastRefreshDate = new Date(lastRefresh);
+  const currentDate = getCurrentDate();
+
+  // Force refresh if it's a new day
+  if (forceRefreshOnNewDay &&
+      (lastRefreshDate.getDate() !== currentDate.getDate() ||
+       lastRefreshDate.getMonth() !== currentDate.getMonth() ||
+       lastRefreshDate.getFullYear() !== currentDate.getFullYear())) {
+    return true;
+  }
+
+  // Force refresh if it's been more than 30 minutes
+  return !isDataStillValid(lastRefresh, 30);
+};
