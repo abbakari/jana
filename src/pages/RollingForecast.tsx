@@ -576,6 +576,21 @@ const RollingForecast: React.FC = () => {
 
       DataPersistenceManager.saveRollingForecastData([savedData]);
       console.log('New item immediately saved to prevent disappearing:', savedData);
+
+      // Log activity for manager visibility
+      ActivityLogger.logRollingForecastActivity(
+        user,
+        `Added new customer-item combination to rolling forecast`,
+        `${combination.customerName} - ${combination.itemName}`,
+        {
+          changes: ['New customer-item combination created'],
+          metadata: {
+            customerName: combination.customerName,
+            itemName: combination.itemName
+          }
+        },
+        'create'
+      );
     }
 
     console.log('New customer-item combination added and persisted:', combination);
