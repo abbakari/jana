@@ -78,26 +78,24 @@ const TyreContainer = styled('div')(() => ({
   margin: '10px 0'
 }));
 
-// Real tyre component using actual image - compact and properly moving
+// Real tyre component using actual image - fixed visibility and movement
 const RealTyre = styled('img')(() => ({
   width: '80px',
   height: '80px',
   borderRadius: '50%',
   position: 'absolute',
   top: '50%',
-  left: '-150px', // Start from completely off-screen left
-  transform: 'translateY(-50%)',
-  animation: `
-    ${continuousHorizontalMove} 6s linear infinite,
-    ${continuousRotation} 0.8s linear infinite
-  `,
+  left: '0',
+  transformOrigin: 'center center',
+  animation: `${tyreMovement} 8s linear infinite`,
   filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.3))',
   border: '3px solid #333',
   boxShadow: `
     0 0 15px rgba(255, 193, 7, 0.2),
     inset 0 0 15px rgba(0,0,0,0.3)
   `,
-  objectFit: 'cover'
+  objectFit: 'cover',
+  zIndex: 10
 }));
 
 // Track/road effect - compact version
