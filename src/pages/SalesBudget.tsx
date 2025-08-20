@@ -410,47 +410,58 @@ const SalesBudget: React.FC = () => {
     }
   }, [user]); // Removed originalTableData.length to prevent infinite loops
 
-  // Enhanced auto-save mechanism to preserve ALL activities and prevent data disappearing
+  // Debounced auto-save mechanism to prevent system overload while preserving data
   useEffect(() => {
     if (user && originalTableData.length > 0) {
-      // Save ALL items to ensure complete activity preservation - no filtering
-      const itemsToSave = originalTableData.map(item => ({
-        id: `complete_save_${item.id}_${Date.now()}`,
-        customer: item.customer,
-        item: item.item,
-        category: item.category,
-        brand: item.brand,
-        type: 'sales_budget' as const,
-        createdBy: user.name,
-        createdAt: new Date().toISOString(),
-        lastModified: new Date().toISOString(),
-        budget2025: item.budget2025,
-        actual2025: item.actual2025,
-        budget2026: item.budget2026,
-        rate: item.rate,
-        stock: item.stock,
-        git: item.git,
-        budgetValue2026: item.budgetValue2026,
-        discount: item.discount,
-        monthlyData: item.monthlyData,
-        status: 'saved'
-      }));
+      // Use debounced auto-save to prevent performance issues
+      const debouncedSave = DebouncedAutoSave.debounce(
+        `sales_budget_${user.name}`,
+        () => {
+          try {
+            // Save important items only to reduce processing load
+            const itemsToSave = originalTableData
+              .filter(item => item.budget2026 > 0 || item.budgetValue2026 > 0 || item.selected)
+              .map(item => ({
+                id: `debounced_save_${item.id}_${Date.now()}`,
+                customer: item.customer,
+                item: item.item,
+                category: item.category,
+                brand: item.brand,
+                type: 'sales_budget' as const,
+                createdBy: user.name,
+                createdAt: new Date().toISOString(),
+                lastModified: new Date().toISOString(),
+                budget2025: item.budget2025,
+                actual2025: item.actual2025,
+                budget2026: item.budget2026,
+                rate: item.rate,
+                stock: item.stock,
+                git: item.git,
+                budgetValue2026: item.budgetValue2026,
+                discount: item.discount,
+                monthlyData: item.monthlyData,
+                status: 'saved'
+              }));
 
-      if (itemsToSave.length > 0) {
-        DataPersistenceManager.saveSalesBudgetData(itemsToSave);
-        console.log('COMPLETE PRESERVATION: Saved ALL', itemsToSave.length, 'items to prevent any disappearing');
+            if (itemsToSave.length > 0) {
+              DataPersistenceManager.saveSalesBudgetData(itemsToSave);
+              console.log('DEBOUNCED SAVE: Preserved', itemsToSave.length, 'important items');
+            }
+          } catch (error) {
+            console.error('Error in debounced auto-save:', error);
+          }
+        },
+        3000 // 3 second delay to prevent performance issues
+      );
 
-        // Additional backup for complete activity history
-        localStorage.setItem('sales_budget_complete_backup', JSON.stringify({
-          timestamp: new Date().toISOString(),
-          data: originalTableData,
-          user: user.name,
-          totalItems: originalTableData.length,
-          note: 'Complete backup to prevent BUD 2026 data disappearing'
-        }));
-      }
+      debouncedSave();
     }
-  }, []); // Removed dependencies to prevent continuous auto-save loops
+
+    // Cleanup on unmount
+    return () => {
+      DebouncedAutoSave.clear(`sales_budget_${user?.name}`);
+    };
+  }, [originalTableData, user]); // Safe dependencies - debounced to prevent loops
 
   // Add event listeners for filter changes with data preservation
   useEffect(() => {
