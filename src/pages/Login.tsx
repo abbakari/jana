@@ -470,21 +470,6 @@ const Login: React.FC = () => {
                   onError={(e) => console.error('Tyre image failed to load:', e)}
                 />
 
-                {/* Static test tyre for debugging */}
-                <img
-                  src="https://cdn.builder.io/api/v1/image/assets%2F44729c48b8a1436188bb6ac245b84af3%2F1ae80643c7e34f259f80e82971111485?format=webp&width=800"
-                  alt="Test tyre"
-                  style={{
-                    width: '60px',
-                    height: '60px',
-                    borderRadius: '50%',
-                    position: 'absolute',
-                    top: '10px',
-                    left: '50px',
-                    border: '2px solid #ff0000',
-                    zIndex: 20
-                  }}
-                />
 
                 <RoadTrack />
               </TyreContainer>
