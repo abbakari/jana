@@ -41,13 +41,13 @@ const rotateTyre = keyframes`
   }
 `;
 
-// Continuous horizontal movement animation
+// Continuous horizontal movement animation - starts from left, moves to right
 const continuousHorizontalMove = keyframes`
   0% {
-    transform: translateX(-200px);
+    transform: translateX(-150px);
   }
   100% {
-    transform: translateX(calc(100vw + 200px));
+    transform: translateX(calc(100vw + 150px));
   }
 `;
 
@@ -77,101 +77,87 @@ const yellowGlow = keyframes`
   }
 `;
 
-// Container for the moving tyre
+// Container for the moving tyre - compact version
 const TyreContainer = styled('div')(() => ({
   position: 'relative',
   width: '100%',
-  height: '150px',
+  height: '100px',
   overflow: 'hidden',
   display: 'flex',
   alignItems: 'center',
-  margin: '20px 0'
+  margin: '10px 0'
 }));
 
-// Real tyre component using actual image
+// Real tyre component using actual image - compact and properly moving
 const RealTyre = styled('img')(() => ({
-  width: '120px',
-  height: '120px',
+  width: '80px',
+  height: '80px',
   borderRadius: '50%',
   position: 'absolute',
   top: '50%',
-  left: '0',
+  left: '-150px', // Start from completely off-screen left
   transform: 'translateY(-50%)',
   animation: `
-    ${continuousHorizontalMove} 8s linear infinite,
-    ${continuousRotation} 1s linear infinite
+    ${continuousHorizontalMove} 6s linear infinite,
+    ${continuousRotation} 0.8s linear infinite
   `,
-  filter: 'drop-shadow(0 8px 16px rgba(0,0,0,0.3))',
-  border: '4px solid #333',
+  filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.3))',
+  border: '3px solid #333',
   boxShadow: `
-    0 0 20px rgba(255, 193, 7, 0.2),
-    inset 0 0 20px rgba(0,0,0,0.3)
+    0 0 15px rgba(255, 193, 7, 0.2),
+    inset 0 0 15px rgba(0,0,0,0.3)
   `,
-  objectFit: 'cover',
-
-  // Add realistic shadow and effects
-  '&::before': {
-    content: '""',
-    position: 'absolute',
-    bottom: '-15px',
-    left: '50%',
-    transform: 'translateX(-50%)',
-    width: '100px',
-    height: '15px',
-    background: 'radial-gradient(ellipse, rgba(0,0,0,0.3) 0%, transparent 70%)',
-    borderRadius: '50%',
-    animation: `${continuousHorizontalMove} 8s linear infinite`
-  }
+  objectFit: 'cover'
 }));
 
-// Track/road effect
+// Track/road effect - compact version
 const RoadTrack = styled('div')(() => ({
   position: 'absolute',
-  bottom: '30px',
+  bottom: '20px',
   left: '0',
   right: '0',
-  height: '8px',
+  height: '4px',
   background: `
     repeating-linear-gradient(
       90deg,
       rgba(0,0,0,0.1) 0px,
-      rgba(0,0,0,0.1) 15px,
-      transparent 15px,
-      transparent 30px
+      rgba(0,0,0,0.1) 10px,
+      transparent 10px,
+      transparent 20px
     )
   `,
-  borderRadius: '4px',
+  borderRadius: '2px',
   opacity: 0.6,
-  animation: 'trackMove 2s linear infinite',
+  animation: 'trackMove 1.5s linear infinite',
 
   '@keyframes trackMove': {
     '0%': {
       backgroundPosition: '0px 0px'
     },
     '100%': {
-      backgroundPosition: '30px 0px'
+      backgroundPosition: '20px 0px'
     }
   }
 }));
 
-// Enhanced yellow form with advanced styling and animations
+// Enhanced yellow form with advanced styling and animations - compact version
 const AdvancedYellowForm = styled(Paper)(({ theme }) => ({
   background: `
-    linear-gradient(135deg, 
-      rgba(255, 235, 59, 0.95) 0%, 
-      rgba(255, 193, 7, 0.95) 30%, 
-      rgba(255, 160, 0, 0.95) 70%, 
+    linear-gradient(135deg,
+      rgba(255, 235, 59, 0.95) 0%,
+      rgba(255, 193, 7, 0.95) 30%,
+      rgba(255, 160, 0, 0.95) 70%,
       rgba(255, 193, 7, 0.95) 100%
     )
   `,
-  padding: theme.spacing(4),
-  borderRadius: theme.spacing(3),
+  padding: theme.spacing(2.5),
+  borderRadius: theme.spacing(2),
   boxShadow: `
-    0 15px 35px rgba(255, 193, 7, 0.3),
+    0 10px 25px rgba(255, 193, 7, 0.3),
     0 5px 15px rgba(0,0,0,0.1),
     inset 0 1px 0 rgba(255,255,255,0.4)
   `,
-  border: '3px solid #F57F17',
+  border: '2px solid #F57F17',
   position: 'relative',
   overflow: 'hidden',
   animation: `${yellowGlow} 4s ease-in-out infinite`,
@@ -219,13 +205,13 @@ const AdvancedYellowForm = styled(Paper)(({ theme }) => ({
   }
 }));
 
-// Enhanced company branding with 3D effect
+// Enhanced company branding with 3D effect - compact version
 const CompanyBranding = styled(Typography)(({ theme }) => ({
   background: `
-    linear-gradient(45deg, 
-      #1976D2 0%, 
-      #42A5F5 30%, 
-      #1976D2 60%, 
+    linear-gradient(45deg,
+      #1976D2 0%,
+      #42A5F5 30%,
+      #1976D2 60%,
       #0D47A1 100%
     )
   `,
@@ -234,29 +220,29 @@ const CompanyBranding = styled(Typography)(({ theme }) => ({
   color: 'transparent',
   fontWeight: 900,
   textAlign: 'center',
-  fontSize: '3.5rem',
-  letterSpacing: '4px',
+  fontSize: '2.5rem',
+  letterSpacing: '3px',
   textShadow: `
     2px 2px 4px rgba(0,0,0,0.3),
     0 0 20px rgba(25, 118, 210, 0.3)
   `,
-  marginBottom: theme.spacing(2),
+  marginBottom: theme.spacing(1),
   position: 'relative',
   backgroundSize: '200% 200%',
   animation: 'textShimmer 4s ease-in-out infinite',
-  
+
   '&::before': {
     content: '"SUPERDOLL"',
     position: 'absolute',
-    top: '3px',
-    left: '3px',
+    top: '2px',
+    left: '2px',
     zIndex: -1,
     background: 'linear-gradient(45deg, rgba(0,0,0,0.3), rgba(0,0,0,0.1))',
     backgroundClip: 'text',
     WebkitBackgroundClip: 'text',
     color: 'transparent'
   },
-  
+
   '@keyframes textShimmer': {
     '0%': { backgroundPosition: '0% 50%' },
     '50%': { backgroundPosition: '100% 50%' },
