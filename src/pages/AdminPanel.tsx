@@ -3,6 +3,7 @@ import Layout from '../components/Layout';
 import { Package, Settings, Users, MessageCircle, Monitor, Activity } from 'lucide-react';
 import AdminStockManagement from '../components/AdminStockManagement';
 import AdminWorkflowCenter from '../components/AdminWorkflowCenter';
+import AdminDiscountManagement from '../components/AdminDiscountManagement';
 import { useAuth } from '../contexts/AuthContext';
 
 const AdminPanel: React.FC = () => {
