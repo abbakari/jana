@@ -1514,36 +1514,47 @@ const SalesBudget: React.FC = () => {
               {/* Year Selectors */}
               <div className="bg-white p-3 rounded-lg shadow-sm border-2 border-indigo-400">
                 <label className="block text-xs font-medium text-gray-700 mb-1 flex items-center gap-1">
-                  📅 YEARS:
+                  📅 YEARS: (Historical from 2021)
+                  {showHistoricalComparison && <span className="text-blue-600">📊</span>}
                 </label>
                 <div className="flex gap-1">
                   <select
                     className="w-full text-xs p-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors"
                     value={selectedYear2025}
                     onChange={(e) => {
-                      console.log('Year 2025 changed:', e.target.value);
+                      console.log('Base year changed:', e.target.value);
                       setSelectedYear2025(e.target.value);
-                      showNotification(`Changed base year to ${e.target.value}`, 'success');
+                      showNotification(`Changed base year to ${formatYearForDisplay(e.target.value)}`, 'success');
                     }}
                   >
-                    <option value="2024">2024</option>
-                    <option value="2025">2025</option>
+                    {availableYears.map(year => (
+                      <option key={`base_${year.value}`} value={year.value}>
+                        {formatYearForDisplay(year.value)}
+                      </option>
+                    ))}
                   </select>
                   <select
                     className="w-full text-xs p-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors"
                     value={selectedYear2026}
                     onChange={(e) => {
-                      console.log('Year 2026 changed:', e.target.value);
+                      console.log('Target year changed:', e.target.value);
                       setSelectedYear2026(e.target.value);
-                      showNotification(`Changed target year to ${e.target.value}`, 'success');
+                      showNotification(`Changed target year to ${formatYearForDisplay(e.target.value)}`, 'success');
                     }}
                   >
-                    {/*but with the integration with backend they must change automatically according to the time*/}
-                    {<option value="2024">2024</option>}
-                    <option value="2025">2025</option>
-                    <option value="2026">2026</option>
+                    {availableYears.map(year => (
+                      <option key={`target_${year.value}`} value={year.value}>
+                        {formatYearForDisplay(year.value)}
+                      </option>
+                    ))}
                   </select>
                 </div>
+                <button
+                  onClick={() => setShowHistoricalComparison(!showHistoricalComparison)}
+                  className="mt-1 text-xs text-blue-600 hover:text-blue-800 font-medium"
+                >
+                  {showHistoricalComparison ? '📉 Hide' : '📊 Show'} Historical Comparison
+                </button>
               </div>
 
               {/* Action Buttons */}
