@@ -43,6 +43,7 @@ import { ActivityLogger } from '../utils/activityLogger';
 import ManagerActivityDashboard from '../components/ManagerActivityDashboard';
 import MessagingSystem from '../components/MessagingSystem';
 import DataIntegrityMonitor from '../utils/dataIntegrityMonitor';
+import DebouncedAutoSave from '../utils/debouncedAutoSave';
 
 interface MonthlyBudget {
   month: string;
