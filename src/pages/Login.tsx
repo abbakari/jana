@@ -41,23 +41,13 @@ const rotateTyre = keyframes`
   }
 `;
 
-// Continuous horizontal movement animation - starts from left, moves to right
-const continuousHorizontalMove = keyframes`
+// Combined horizontal movement and rotation animation
+const tyreMovement = keyframes`
   0% {
-    transform: translateX(-150px);
+    transform: translateX(-150px) translateY(-50%) rotate(0deg);
   }
   100% {
-    transform: translateX(calc(100vw + 150px));
-  }
-`;
-
-// Continuous rotation animation
-const continuousRotation = keyframes`
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
+    transform: translateX(calc(100vw + 150px)) translateY(-50%) rotate(720deg);
   }
 `;
 
