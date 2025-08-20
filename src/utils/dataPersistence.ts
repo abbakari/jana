@@ -471,6 +471,85 @@ export class DataPersistenceManager {
 
     return 'mixed';
   }
+
+  // Historical data management functions
+  static getHistoricalDataByYear(year: number, type: 'sales_budget' | 'rolling_forecast') {
+    try {
+      const key = type === 'sales_budget' ? 'saved_sales_budget_data' : 'saved_rolling_forecast_data';
+      const data = JSON.parse(localStorage.getItem(key) || '[]');
+
+      return data.filter((item: SavedBudgetData | SavedForecastData) => {
+        // If year is specified in item, use it; otherwise, parse from createdAt
+        const itemYear = item.year || new Date(item.createdAt).getFullYear();
+        return itemYear === year;
+      });
+    } catch (error) {
+      console.error('Error getting historical data by year:', error);
+      return [];
+    }
+  }
+
+  static saveHistoricalData(data: (SavedBudgetData | SavedForecastData)[], year: number, type: 'sales_budget' | 'rolling_forecast') {
+    try {
+      const dataWithYear = data.map(item => ({ ...item, year }));
+
+      if (type === 'sales_budget') {
+        this.saveSalesBudgetData(dataWithYear as SavedBudgetData[]);
+      } else {
+        this.saveRollingForecastData(dataWithYear as SavedForecastData[]);
+      }
+
+      console.log(`Saved ${data.length} historical ${type} items for year ${year}`);
+    } catch (error) {
+      console.error('Error saving historical data:', error);
+    }
+  }
+
+  static getAvailableHistoricalYears(type: 'sales_budget' | 'rolling_forecast') {
+    try {
+      const key = type === 'sales_budget' ? 'saved_sales_budget_data' : 'saved_rolling_forecast_data';
+      const data = JSON.parse(localStorage.getItem(key) || '[]');
+
+      const years = new Set<number>();
+      data.forEach((item: SavedBudgetData | SavedForecastData) => {
+        const itemYear = item.year || new Date(item.createdAt).getFullYear();
+        years.add(itemYear);
+      });
+
+      return Array.from(years).sort((a, b) => b - a); // Newest first
+    } catch (error) {
+      console.error('Error getting available historical years:', error);
+      return [];
+    }
+  }
+
+  static migrateLegacyDataToHistorical() {
+    try {
+      // Migrate sales budget data
+      const salesBudgetData = this.getSalesBudgetData();
+      const updatedSalesBudgetData = salesBudgetData.map((item: SavedBudgetData) => {
+        if (!item.year) {
+          return { ...item, year: new Date(item.createdAt).getFullYear() };
+        }
+        return item;
+      });
+      localStorage.setItem('saved_sales_budget_data', JSON.stringify(updatedSalesBudgetData));
+
+      // Migrate rolling forecast data
+      const forecastData = this.getRollingForecastData();
+      const updatedForecastData = forecastData.map((item: SavedForecastData) => {
+        if (!item.year) {
+          return { ...item, year: new Date(item.createdAt).getFullYear() };
+        }
+        return item;
+      });
+      localStorage.setItem('saved_rolling_forecast_data', JSON.stringify(updatedForecastData));
+
+      console.log('Migrated legacy data to include year information');
+    } catch (error) {
+      console.error('Error migrating legacy data:', error);
+    }
+  }
 }
 
 export default DataPersistenceManager;
