@@ -36,6 +36,8 @@ import DataPersistenceManager, { SavedBudgetData } from '../utils/dataPersistenc
 import { initializeSampleGitData } from '../utils/sampleGitData';
 import { DiscountCalculator } from '../utils/discountCalculations';
 import AdminDiscountManagement from '../components/AdminDiscountManagement';
+import { ActivityLogger } from '../utils/activityLogger';
+import ManagerActivityDashboard from '../components/ManagerActivityDashboard';
 
 interface MonthlyBudget {
   month: string;
