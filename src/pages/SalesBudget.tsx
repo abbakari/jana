@@ -49,6 +49,7 @@ import {
   formatYearForDisplay,
   getCurrentYear
 } from '../utils/timeUtils';
+import { useFullTimeSync } from '../hooks/useTimeSync';
 
 interface MonthlyBudget {
   month: string;
